@@ -99,6 +99,7 @@ void AWKPlayerCharacterBase::InitInput()
 		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
 		check(EnhancedInputComponent);
 		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
+		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Completed, this, &ThisClass::Input_Move_Complete);
 		EnhancedInputComponent->BindAction(IA_LookMouse, ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse);
 
 		BindAbilitySystemComponentInput();
@@ -121,6 +122,13 @@ void AWKPlayerCharacterBase::Input_Move(const FInputActionValue& InputActionValu
 		const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
 		AddMovementInput(MovementDirection, Value.Y);
 	}
+
+	MoveInput = Value;
+}
+
+void AWKPlayerCharacterBase::Input_Move_Complete(const FInputActionValue& InputActionValue)
+{
+	MoveInput = FVector2D::ZeroVector;
 }
 
 void AWKPlayerCharacterBase::Input_LookMouse(const FInputActionValue& InputActionValue)
@@ -229,6 +237,11 @@ void AWKPlayerCharacterBase::FinishDying()
 		}
 	}
 	Super::FinishDying();
+}
+
+FVector2D AWKPlayerCharacterBase::GetMoveInput() const
+{
+	return MoveInput;
 }
 
 void AWKPlayerCharacterBase::InitializeFloatingStatusBar()

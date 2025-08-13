@@ -6,6 +6,7 @@
 #include "WKAnimInstanceBase.h"
 #include "WuKongAnimInstance.generated.h"
 
+class AWuKongPlayerCharacter;
 /**
  * 
  */
@@ -15,4 +16,58 @@ class BLACKWK_API UWuKongAnimInstance : public UWKAnimInstanceBase
 	GENERATED_BODY()
 
 protected:
+	virtual void NativeInitializeAnimation() override;
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	void UpdateInput();
+	void UpdateRotation();
+
+	// 向左进入大旋转
+	UFUNCTION(BlueprintCallable)
+	void OnEnterTurnLeft180();
+
+	// 向右进入大旋转
+	UFUNCTION(BlueprintCallable)
+	void OnEnterTurnRight180();
+
+	// 向左离开大旋转
+	UFUNCTION(BlueprintCallable)
+	void OnLeaveTurnLeft180();
+
+	// 向右离开大旋转
+	UFUNCTION(BlueprintCallable)
+	void OnLeaveTurnRight180();
+
+	void UpdateTurn180();
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Input")
+	FVector2D MoveInput;
+	
+	/// Ref
+	UPROPERTY(BlueprintReadOnly, Category = "References")
+	TWeakObjectPtr<AWuKongPlayerCharacter> OwnerWuKong;
+
+	// 平面速度
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	FVector2D VelocityPlane;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	float VelocityPlaneLength;
+
+	// 旋转角度
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	float TurnAngle = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	float TurnAngle180 = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	bool bEnterTurnLeft180 = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	bool bEnterTurnRight180 = false;
+
+private:
+	FTransform TurnTransform180;
 };

@@ -40,6 +40,8 @@ public:
 
 	virtual void FinishDying() override;
 
+	FVector2D GetMoveInput() const;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
@@ -47,6 +49,7 @@ protected:
 	void InitInput();
 
 	void Input_Move(const FInputActionValue& InputActionValue);
+	void Input_Move_Complete(const FInputActionValue& InputActionValue);
 	void Input_LookMouse(const FInputActionValue& InputActionValue);
 
 	// Creates and initializes the floating status bar for heroes.
@@ -105,4 +108,7 @@ protected:
 	bool ASCInputBound = false;
 
 	FGameplayTag DeadTag;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D MoveInput;
 };

@@ -6,6 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "WKAnimInstanceBase.generated.h"
 
+class AWKCharacterBase;
 /**
  * 
  */
@@ -16,4 +17,8 @@ class BLACKWK_API UWKAnimInstanceBase : public UAnimInstance
 
 protected:
 	virtual void NativeInitializeAnimation() override;
+
+protected:
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<AWKCharacterBase> OwnerWK;
 };

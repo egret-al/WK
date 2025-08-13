@@ -3,7 +3,14 @@
 
 #include "WKAnimInstanceBase.h"
 
+#include "BlackWK/Character/WKCharacterBase.h"
+
 void UWKAnimInstanceBase::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
+
+	if (AWKCharacterBase* OwnerCharacter = Cast<AWKCharacterBase>(TryGetPawnOwner()))
+	{
+		OwnerWK = OwnerCharacter;
+	}
 }
