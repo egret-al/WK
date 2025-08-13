@@ -1,0 +1,317 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "WKPlayerCharacterBase.h"
+
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
+#include "BlackWK/GameModes/WKGameMode.h"
+#include "BlackWK/Player/WKPlayerController.h"
+#include "BlackWK/Player/WKPlayerState.h"
+#include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
+#include "BlackWK/UI/WKFloatingStatusBarWidget.h"
+#include "Kismet/GameplayStatics.h"
+
+AWKPlayerCharacterBase::AWKPlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(FName("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->SetRelativeLocation(FVector(0, 0, 68.492264));
+
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(FName("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom);
+	FollowCamera->FieldOfView = 80.0f;
+
+	// GunComponent = CreateDefaultSubobject<USkeletalMeshComponent>(FName("Gun"));
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	// Makes sure that the animations play on the Server so that we can use bone and socket transforms
+	// to do things like spawning projectiles and other FX.
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionProfileName(FName("NoCollision"));
+
+	bUseControllerRotationYaw = false;
+
+	UIFloatingStatusBarComponent = CreateDefaultSubobject<UWidgetComponent>(FName("UIFloatingStatusBarComponent"));
+	UIFloatingStatusBarComponent->SetupAttachment(RootComponent);
+	UIFloatingStatusBarComponent->SetRelativeLocation(FVector(0, 0, 120));
+	UIFloatingStatusBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	UIFloatingStatusBarComponent->SetDrawSize(FVector2D(500, 500));
+
+	UIFloatingStatusBarClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/Game/_Game/UI/Widget/WBP_PlayerFloatingStatusBar.WBP_PlayerFloatingStatusBar_C"));
+	if (!UIFloatingStatusBarClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s() Failed to find UIFloatingStatusBarClass. If it was moved, please update the reference location in C++."), *FString(__FUNCTION__));
+	}
+
+	// AIControllerClass = AGDHeroAIController::StaticClass();
+
+	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
+}
+
+void AWKPlayerCharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitInput();
+
+	// Only needed for Heroes placed in world and when the player is the Server.
+	// On respawn, they are set up in PossessedBy.
+	// When the player a client, the floating status bars are all set up in OnRep_PlayerState.
+	InitializeFloatingStatusBar();
+
+	StartingCameraBoomArmLength = CameraBoom->TargetArmLength;
+	StartingCameraBoomLocation = CameraBoom->GetRelativeLocation();
+}
+
+void AWKPlayerCharacterBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	// if (GunComponent && GetMesh())
+	// {
+	// 	GunComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("GunSocket"));
+	// }
+}
+
+void AWKPlayerCharacterBase::InitInput()
+{
+	if (AWKPlayerController* PC = Cast<AWKPlayerController>(GetController()))
+	{
+		ULocalPlayer* LP = PC->GetLocalPlayer();
+		check(LP);
+
+		UEnhancedInputLocalPlayerSubsystem* InputLocalPlayerSubsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+		check(InputLocalPlayerSubsystem);
+
+		InputLocalPlayerSubsystem->ClearAllMappings();
+		InputLocalPlayerSubsystem->AddMappingContext(IMC_Default, 0);
+
+		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+		check(EnhancedInputComponent);
+		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
+		EnhancedInputComponent->BindAction(IA_LookMouse, ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse);
+
+		BindAbilitySystemComponentInput();
+	}
+}
+
+void AWKPlayerCharacterBase::Input_Move(const FInputActionValue& InputActionValue)
+{
+	const FVector2D Value = InputActionValue.Get<FVector2D>();
+	const FRotator MovementRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
+
+	if (Value.X != 0.0f)
+	{
+		const FVector MovementDirection = MovementRotation.RotateVector(FVector::RightVector);
+		AddMovementInput(MovementDirection, Value.X);
+	}
+
+	if (Value.Y != 0.0f)
+	{
+		const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+		AddMovementInput(MovementDirection, Value.Y);
+	}
+}
+
+void AWKPlayerCharacterBase::Input_LookMouse(const FInputActionValue& InputActionValue)
+{
+	const FVector2D Value = InputActionValue.Get<FVector2D>();
+
+	if (Value.X != 0.0f)
+	{
+		AddControllerYawInput(Value.X);
+	}
+
+	if (Value.Y != 0.0f)
+	{
+		AddControllerPitchInput(Value.Y);
+	}
+}
+
+void AWKPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void AWKPlayerCharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	AWKPlayerState* PS = GetPlayerState<AWKPlayerState>();
+	if (PS)
+	{
+		// Set the ASC on the Server. Clients do this in OnRep_PlayerState()
+		AbilitySystemComponent = Cast<UWKAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+
+		// AI won't have PlayerControllers so we can init again here just to be sure. No harm in initing twice for heroes that have PlayerControllers.
+		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
+
+		// Set the AttributeSetBase for convenience attribute functions
+		AttributeSetBase = PS->GetAttributeSetBase();
+
+		// If we handle players disconnecting and rejoining in the future, we'll have to change this so that possession from rejoining doesn't reset attributes.
+		// For now assume possession = spawn/respawn.
+		InitializeAttributes();
+
+		
+		// Respawn specific things that won't affect first possession.
+
+		// Forcibly set the DeadTag count to 0
+		AbilitySystemComponent->SetTagMapCount(DeadTag, 0);
+
+		// Set Health/Mana/Stamina to their max. This is only necessary for *Respawn*.
+		SetHealth(GetMaxHealth());
+		SetMana(GetMaxMana());
+		SetStamina(GetMaxStamina());
+		SetHulu(GetMaxHulu());
+
+		// End respawn specific things
+
+
+		AddStartupEffects();
+		
+		AddCharacterAbilities();
+
+		AWKPlayerController* PC = Cast<AWKPlayerController>(GetController());
+		if (PC)
+		{
+			PC->CreateHUD();
+		}
+
+		InitializeFloatingStatusBar();
+	}
+}
+
+USpringArmComponent* AWKPlayerCharacterBase::GetCameraBoom() const
+{
+	return CameraBoom;
+}
+
+UCameraComponent* AWKPlayerCharacterBase::GetFollowCamera() const
+{
+	return FollowCamera;
+}
+
+float AWKPlayerCharacterBase::GetStartingCameraBoomArmLength()
+{
+	return StartingCameraBoomArmLength;
+}
+
+FVector AWKPlayerCharacterBase::GetStartingCameraBoomLocation()
+{
+	return StartingCameraBoomLocation;
+}
+
+UWKFloatingStatusBarWidget* AWKPlayerCharacterBase::GetFloatingStatusBar()
+{
+	return UIFloatingStatusBar;
+}
+
+void AWKPlayerCharacterBase::FinishDying()
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		AWKGameMode* GM = Cast<AWKGameMode>(GetWorld()->GetAuthGameMode());
+
+		if (GM)
+		{
+			GM->HeroDied(GetController());
+		}
+	}
+	Super::FinishDying();
+}
+
+void AWKPlayerCharacterBase::InitializeFloatingStatusBar()
+{
+	// Only create once
+	if (UIFloatingStatusBar || !AbilitySystemComponent.IsValid())
+	{
+		return;
+	}
+	
+	// Setup UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
+	AWKPlayerController* PC = Cast<AWKPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PC && PC->IsLocalPlayerController())
+	{
+		if (UIFloatingStatusBarClass)
+		{
+			UIFloatingStatusBar = CreateWidget<UWKFloatingStatusBarWidget>(PC, UIFloatingStatusBarClass);
+			if (UIFloatingStatusBar && UIFloatingStatusBarComponent)
+			{
+				UIFloatingStatusBarComponent->SetWidget(UIFloatingStatusBar);
+	
+				// Setup the floating status bar
+				UIFloatingStatusBar->SetHealthPercentage(GetHealth() / GetMaxHealth());
+				UIFloatingStatusBar->SetManaPercentage(GetMana() / GetMaxMana());
+			}
+		}
+	}
+}
+
+void AWKPlayerCharacterBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AWKPlayerState* PS = GetPlayerState<AWKPlayerState>();
+	if (PS)
+	{
+		// Set the ASC for clients. Server does this in PossessedBy.
+		AbilitySystemComponent = Cast<UWKAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+
+		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
+		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+
+		// Bind player input to the AbilitySystemComponent. Also called in SetupPlayerInputComponent because of a potential race condition.
+		BindAbilitySystemComponentInput();
+
+		// Set the AttributeSetBase for convenience attribute functions
+		AttributeSetBase = PS->GetAttributeSetBase();
+
+		// If we handle players disconnecting and rejoining in the future, we'll have to change this so that posession from rejoining doesn't reset attributes.
+		// For now assume possession = spawn/respawn.
+		InitializeAttributes();
+
+		AWKPlayerController* PC = Cast<AWKPlayerController>(GetController());
+		if (PC)
+		{
+			PC->CreateHUD();
+		}
+
+		// Simulated on proxies don't have their PlayerStates yet when BeginPlay is called so we call it again here
+		InitializeFloatingStatusBar();
+
+
+		// Respawn specific things that won't affect first possession.
+
+		// Forcibly set the DeadTag count to 0
+		AbilitySystemComponent->SetTagMapCount(DeadTag, 0);
+
+		// Set Health/Mana/Stamina to their max. This is only necessary for *Respawn*.
+		SetHealth(GetMaxHealth());
+		SetMana(GetMaxMana());
+		SetStamina(GetMaxStamina());
+		SetHulu(GetMaxHulu());
+	}
+}
+
+void AWKPlayerCharacterBase::BindAbilitySystemComponentInput()
+{
+	if (!ASCInputBound && AbilitySystemComponent.IsValid() && IsValid(InputComponent))
+	{
+		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/BlackWK"), FName("EWKAbilityInputID"));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FGameplayAbilityInputBinds(FString("ConfirmTarget"),
+			FString("CancelTarget"), AbilityEnumAssetPath, static_cast<int32>(EWKAbilityInputID::Confirm), static_cast<int32>(EWKAbilityInputID::Cancel)));
+	
+		ASCInputBound = true;
+	}
+}
