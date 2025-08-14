@@ -86,9 +86,27 @@ void UWuKongAnimInstance::UpdateTurn180()
 	FTransform RelativeTransform = AccelerationTransform.GetRelativeTransform(TurnTransform180);
 	TurnAngle180 = UKismetMathLibrary::DegAtan2(RelativeTransform.GetLocation().Y, RelativeTransform.GetLocation().X);
 	
-	if (!bEnterTurnLeft180 && !bEnterTurnRight180)
+	if (!bEnterTurnLeft180 && !bEnterTurnRight180 && !bRunStartL && !bRunStartR)
 	{
 		// 记录Transform
 		TurnTransform180 = OwnerWuKong->GetTransform();
 	}
+}
+
+void UWuKongAnimInstance::OnRunStartLeft()
+{
+	bRunStartL = true;
+	bRunStartR = false;
+}
+
+void UWuKongAnimInstance::OnRunStartRight()
+{
+	bRunStartL = false;
+	bRunStartR = true;
+}
+
+void UWuKongAnimInstance::ResetRunStart()
+{
+	bRunStartL = false;
+	bRunStartR = false;
 }

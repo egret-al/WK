@@ -40,6 +40,18 @@ protected:
 
 	void UpdateTurn180();
 
+	// 向左起步
+	UFUNCTION(BlueprintCallable)
+	void OnRunStartLeft();
+
+	// 向右起步
+	UFUNCTION(BlueprintCallable)
+	void OnRunStartRight();
+
+	// 重置起步标识
+	UFUNCTION(BlueprintCallable)
+	void ResetRunStart();
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Input")
 	FVector2D MoveInput;
@@ -67,6 +79,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
 	bool bEnterTurnRight180 = false;
+	
+	// 起步
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	bool bRunStartL = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	bool bRunStartR = false;
 
 private:
 	FTransform TurnTransform180;
