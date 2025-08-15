@@ -43,14 +43,25 @@ void UWuKongAnimInstance::UpdateInput()
 
 void UWuKongAnimInstance::UpdateRotation()
 {
-	FTransform Transform = OwnerWuKong->GetActorTransform();
-	// 获取加速度相对于角色空间下的末端位置
-	// 将加速度转换到角色空间下
-	FTransform AccelerationTransform;
-	AccelerationTransform.SetLocation(OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration() + Transform.GetLocation());
-	FTransform RelativeTransform = AccelerationTransform.GetRelativeTransform(Transform);
-	TurnAngle = UKismetMathLibrary::DegAtan2(RelativeTransform.GetLocation().Y, RelativeTransform.GetLocation().X);
+	// 获取角色朝向的旋转
+	FRotator ActorRotation = OwnerWuKong->GetActorRotation();
 
+	// 将世界空间加速度转换到角色局部空间
+	FVector LocalAcceleration = ActorRotation.UnrotateVector(OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration());
+
+	// 计算水平面上的转向角度（忽略Z轴）
+	TurnAngle = FMath::RadiansToDegrees(FMath::Atan2(LocalAcceleration.Y, LocalAcceleration.X));
+	// FTransform Transform = OwnerWuKong->GetActorTransform();
+	// // 获取加速度相对于角色空间下的末端位置
+	// // 将加速度转换到角色空间下
+	// FTransform AccelerationTransform;
+	// AccelerationTransform.SetLocation(OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration() + Transform.GetLocation());
+	// FTransform RelativeTransform = AccelerationTransform.GetRelativeTransform(Transform);
+	// TurnAngle = UKismetMathLibrary::DegAtan2(RelativeTransform.GetLocation().Y, RelativeTransform.GetLocation().X);
+
+	FString Msg = FString::Printf(TEXT("Turn angle: %f"), TurnAngle);
+	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Black, Msg);
+	
 	// 两种计算TurnAngle的方法等价
 	// FVector RelativeAccel = UKismetMathLibrary::LessLess_VectorRotator(Acceleration, OwnerWuKong->GetActorRotation());
 	// TurnAngle = UKismetMathLibrary::DegAtan2(RelativeAccel.Y, RelativeAccel.X);
