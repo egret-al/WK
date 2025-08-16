@@ -56,6 +56,9 @@ void UWuKongAnimInstance::UpdateRotation()
 	// TurnAngle = UKismetMathLibrary::DegAtan2(RelativeAccel.Y, RelativeAccel.X);
 
 	UpdateTurn180();
+
+	FString Msg = FString::Printf(TEXT("%f, %f|  %d %d %d %d"), TurnAngle, TurnAngle180, bEnterTurnLeft180, bEnterTurnRight180, bRunStartL, bRunStartR);
+	GEngine->AddOnScreenDebugMessage(1, 0.1f, FColor::Red, Msg);
 }
 
 void UWuKongAnimInstance::OnEnterTurnLeft180()
@@ -68,13 +71,9 @@ void UWuKongAnimInstance::OnEnterTurnRight180()
 	bEnterTurnRight180 = true;
 }
 
-void UWuKongAnimInstance::OnLeaveTurnLeft180()
+void UWuKongAnimInstance::ResetTurn180()
 {
 	bEnterTurnLeft180 = false;
-}
-
-void UWuKongAnimInstance::OnLeaveTurnRight180()
-{
 	bEnterTurnRight180 = false;
 }
 
@@ -85,8 +84,11 @@ void UWuKongAnimInstance::UpdateTurn180()
 	AccelerationTransform.SetLocation(OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration() + TurnTransform180.GetLocation());
 	FTransform RelativeTransform = AccelerationTransform.GetRelativeTransform(TurnTransform180);
 	TurnAngle180 = UKismetMathLibrary::DegAtan2(RelativeTransform.GetLocation().Y, RelativeTransform.GetLocation().X);
+
+	const bool bAnyTurn180 = bEnterTurnLeft180 || bEnterTurnRight180;
+	const bool bAnyRunStart = bRunStartL || bRunStartR;
 	
-	if (!bEnterTurnLeft180 && !bEnterTurnRight180 && !bRunStartL && !bRunStartR)
+	if (!bAnyTurn180 && !bAnyRunStart)
 	{
 		// 记录Transform
 		TurnTransform180 = OwnerWuKong->GetTransform();

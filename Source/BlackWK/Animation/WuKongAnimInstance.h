@@ -30,13 +30,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnEnterTurnRight180();
 
-	// 向左离开大旋转
 	UFUNCTION(BlueprintCallable)
-	void OnLeaveTurnLeft180();
-
-	// 向右离开大旋转
-	UFUNCTION(BlueprintCallable)
-	void OnLeaveTurnRight180();
+	void ResetTurn180();
 
 	void UpdateTurn180();
 
