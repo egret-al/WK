@@ -71,6 +71,28 @@ void UWuKongAnimInstance::UpdateRotation()
 		ContinuousEmptyAccelNum = 0;
 	}
 	bStop = ContinuousEmptyAccelNum > MaxContinuousEmptyAccelNum;
+
+	if (FMath::Abs(LastAccelerationLength - CurrentAccelerationLength) > 300.f && CurrentAccelerationLength > 1000.f)
+	{
+		bCanTurn = true;
+	}
+	else
+	{
+		if (bCanTurn)
+		{
+			if (CanTurnFrameWindow > 10)
+			{
+				bCanTurn = false;
+				CanTurnFrameWindow = 0;
+			}
+			else
+			{
+				CanTurnFrameWindow++;
+			}
+		}
+	}
+
+	// CalcTurnAngleFinal()
 	
 	
 	LastAccelerationLength = AccelerationLength;
@@ -78,8 +100,8 @@ void UWuKongAnimInstance::UpdateRotation()
 
 	UpdateTurn180();
 
-	// FString Msg = FString::Printf(TEXT("%f, %f|  %d %d %d %d"), TurnAngle, TurnAngle180, bEnterTurnLeft180, bEnterTurnRight180, bRunStartL, bRunStartR);
-	// GEngine->AddOnScreenDebugMessage(1, 0.1f, FColor::Red, Msg);
+	FString Msg = FString::Printf(TEXT("%f, %f|  %d %d %d %d"), TurnAngle, TurnAngle180, bEnterTurnLeft180, bEnterTurnRight180, bRunStartL, bRunStartR);
+	GEngine->AddOnScreenDebugMessage(1, 0.1f, FColor::Red, Msg);
 }
 
 void UWuKongAnimInstance::OnEnterTurnLeft180()

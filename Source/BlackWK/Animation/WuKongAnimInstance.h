@@ -161,4 +161,7 @@ protected:
 
 private:
 	FTransform TurnTransform180;
+
+	bool bCanTurn;
+	int32 CanTurnFrameWindow = 0;
 };
