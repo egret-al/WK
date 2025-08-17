@@ -4,20 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "WKAnimInstanceBase.h"
+#include "WKAnimInstanceExtensionInterface.h"
 #include "WuKongAnimInstance.generated.h"
 
 class AWuKongPlayerCharacter;
-/**
- * 
- */
+
 UCLASS()
-class BLACKWK_API UWuKongAnimInstance : public UWKAnimInstanceBase
+class BLACKWK_API UWuKongAnimInstance : public UWKAnimInstanceBase, public IWKAnimInstanceExtensionInterface
 {
 	GENERATED_BODY()
 
 protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativePostEvaluateAnimation() override;
 
 	void UpdateInput();
 	void UpdateRotation();
@@ -47,7 +47,35 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ResetRunStart();
 
+	void CalcTurnAngleFinal(
+		float InTurnAngle,
+		float InTurnAngle1,
+		float InTurnAngle2,
+		float InTurnAngleL1,
+		float InTurnAngleL2,
+		float InTurnAngleR1,
+		float InTurnAngleR2,
+		int32 InRotationNum,
+		bool bIsCircleL,
+		bool bIsCircleR,
+		float& OutTurnAngleL,
+		float& OutTurnAngleR,
+		float& OutTurnAngleFinal,
+		int32& OutRotationNum,
+		bool& bOutCircleL,
+		bool& bOutCircleR);
+
+public:
+	virtual void ModifyRootMotionTransform(FTransform& InoutTransform) override;
+	
 protected:
+	// 是否忽略RootMotion的旋转
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RootMotion")
+	uint8 bIgnoreMontageRootMotionRotation : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "RootMotion")
+	FQuat RootRotationCache = FQuat::Identity;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Input")
 	FVector2D MoveInput;
 	
@@ -74,6 +102,55 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
 	bool bEnterTurnRight180 = false;
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngle1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngle2;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleAvg;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleL;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleL1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleL2;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleR;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleR1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleR2;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float TurnAngleFinal;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	int32 RotationNum = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float AccelerationLength;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	float LastAccelerationLength;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	int32 ContinuousEmptyAccelNum = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	int32 MaxContinuousEmptyAccelNum = 5;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	bool bStop = false;
 	
 	// 起步
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")

@@ -3,34 +3,25 @@
 
 #include "WKCharacterMovementComponent.h"
 
+#include "BlackWK/Animation/WKAnimInstanceExtensionInterface.h"
+#include "GameFramework/Character.h"
 
-// Sets default values for this component's properties
-UWKCharacterMovementComponent::UWKCharacterMovementComponent()
+static FTransform FixRootMotionTransformStatic(const FTransform& InTransform, UCharacterMovementComponent* InMovement, float DeltaSeconds)
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
+	FTransform OutTransform = InTransform;
+	if (ACharacter* Character = InMovement->GetCharacterOwner())
+	{
+		if (IWKAnimInstanceExtensionInterface* AnimInst = Cast<IWKAnimInstanceExtensionInterface>(Character->GetMesh()->GetAnimInstance()))
+		{
+			AnimInst->ModifyRootMotionTransform(OutTransform);
+		}
+	}
+	return OutTransform;
+}
+
+UWKCharacterMovementComponent::UWKCharacterMovementComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	ProcessRootMotionPostConvertToWorld.BindStatic(FixRootMotionTransformStatic);
 }
-
-
-// Called when the game starts
-void UWKCharacterMovementComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// ...
-	
-}
-
-
-// Called every frame
-void UWKCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                                  FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-

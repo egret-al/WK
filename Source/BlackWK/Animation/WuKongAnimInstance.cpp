@@ -36,6 +36,17 @@ void UWuKongAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	UpdateRotation();
 }
 
+void UWuKongAnimInstance::NativePostEvaluateAnimation()
+{
+	if (bIgnoreMontageRootMotionRotation)
+	{
+		if(!GetSkelMeshComponent()->IsPlayingRootMotion())
+		{
+			RootRotationCache = FQuat::Identity;
+		}
+	}
+}
+
 void UWuKongAnimInstance::UpdateInput()
 {
 	MoveInput = OwnerWuKong->GetMoveInput();
@@ -43,22 +54,32 @@ void UWuKongAnimInstance::UpdateInput()
 
 void UWuKongAnimInstance::UpdateRotation()
 {
-	FTransform Transform = OwnerWuKong->GetActorTransform();
-	// 获取加速度相对于角色空间下的末端位置
-	// 将加速度转换到角色空间下
-	FTransform AccelerationTransform;
-	AccelerationTransform.SetLocation(OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration() + Transform.GetLocation());
-	FTransform RelativeTransform = AccelerationTransform.GetRelativeTransform(Transform);
-	TurnAngle = UKismetMathLibrary::DegAtan2(RelativeTransform.GetLocation().Y, RelativeTransform.GetLocation().X);
-
 	// 两种计算TurnAngle的方法等价
-	// FVector RelativeAccel = UKismetMathLibrary::LessLess_VectorRotator(Acceleration, OwnerWuKong->GetActorRotation());
-	// TurnAngle = UKismetMathLibrary::DegAtan2(RelativeAccel.Y, RelativeAccel.X);
+	FVector CurrentAcceleration = OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration();
+	FVector LocalAcceleration = UKismetMathLibrary::LessLess_VectorRotator(CurrentAcceleration, OwnerWuKong->GetActorRotation());
+	TurnAngle = UKismetMathLibrary::DegAtan2(LocalAcceleration.Y, LocalAcceleration.X);
+
+
+	float CurrentAccelerationLength = CurrentAcceleration.Length();
+	
+	if (AccelerationLength + CurrentAccelerationLength == 0.f)
+	{
+		ContinuousEmptyAccelNum++;
+	}
+	else
+	{
+		ContinuousEmptyAccelNum = 0;
+	}
+	bStop = ContinuousEmptyAccelNum > MaxContinuousEmptyAccelNum;
+	
+	
+	LastAccelerationLength = AccelerationLength;
+	AccelerationLength = CurrentAccelerationLength;
 
 	UpdateTurn180();
 
-	FString Msg = FString::Printf(TEXT("%f, %f|  %d %d %d %d"), TurnAngle, TurnAngle180, bEnterTurnLeft180, bEnterTurnRight180, bRunStartL, bRunStartR);
-	GEngine->AddOnScreenDebugMessage(1, 0.1f, FColor::Red, Msg);
+	// FString Msg = FString::Printf(TEXT("%f, %f|  %d %d %d %d"), TurnAngle, TurnAngle180, bEnterTurnLeft180, bEnterTurnRight180, bRunStartL, bRunStartR);
+	// GEngine->AddOnScreenDebugMessage(1, 0.1f, FColor::Red, Msg);
 }
 
 void UWuKongAnimInstance::OnEnterTurnLeft180()
@@ -111,4 +132,43 @@ void UWuKongAnimInstance::ResetRunStart()
 {
 	bRunStartL = false;
 	bRunStartR = false;
+}
+
+void UWuKongAnimInstance::CalcTurnAngleFinal(
+	float InTurnAngle,
+	float InTurnAngle1,
+	float InTurnAngle2,
+	float InTurnAngleL1,
+	float InTurnAngleL2,
+	float InTurnAngleR1,
+	float InTurnAngleR2,
+	int32 InRotationNum,
+	bool bIsCircleL,
+	bool bIsCircleR,
+	float& OutTurnAngleL,
+	float& OutTurnAngleR,
+	float& OutTurnAngleFinal,
+	int32& OutRotationNum,
+	bool& bOutCircleL,
+	bool& bOutCircleR)
+{
+}
+
+void UWuKongAnimInstance::ModifyRootMotionTransform(FTransform& InoutTransform)
+{
+	// 提取Transform中的旋转，叠加到RootRotationCache
+	if (bIgnoreMontageRootMotionRotation)
+	{
+		// 如果已缓存旋转，则需要调整位移
+		if (!RootRotationCache.IsIdentity())
+		{
+			FVector Translation = InoutTransform.GetTranslation();
+			Translation = RootRotationCache.RotateVector(Translation);
+			InoutTransform.SetTranslation(Translation);
+		}
+		
+		// 叠加旋转
+		RootRotationCache = InoutTransform.GetRotation() * RootRotationCache;
+		InoutTransform.SetRotation(FQuat::Identity);
+	}
 }
