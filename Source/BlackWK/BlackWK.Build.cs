@@ -22,6 +22,8 @@ public class BlackWK : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"GameplayMessageRuntime",
+			
+			"AIModule"
 		});
 	}
 }

@@ -60,43 +60,39 @@ void UWuKongAnimInstance::UpdateRotation()
 	TurnAngle = UKismetMathLibrary::DegAtan2(LocalAcceleration.Y, LocalAcceleration.X);
 
 
-	float CurrentAccelerationLength = CurrentAcceleration.Length();
-	
-	if (AccelerationLength + CurrentAccelerationLength == 0.f)
-	{
-		ContinuousEmptyAccelNum++;
-	}
-	else
-	{
-		ContinuousEmptyAccelNum = 0;
-	}
-	bStop = ContinuousEmptyAccelNum > MaxContinuousEmptyAccelNum;
-
-	if (FMath::Abs(LastAccelerationLength - CurrentAccelerationLength) > 300.f && CurrentAccelerationLength > 1000.f)
-	{
-		bCanTurn = true;
-	}
-	else
-	{
-		if (bCanTurn)
-		{
-			if (CanTurnFrameWindow > 10)
-			{
-				bCanTurn = false;
-				CanTurnFrameWindow = 0;
-			}
-			else
-			{
-				CanTurnFrameWindow++;
-			}
-		}
-	}
-
+	// float CurrentAccelerationLength = CurrentAcceleration.Length();
+	// if (AccelerationLength + CurrentAccelerationLength == 0.f)
+	// {
+	// 	ContinuousEmptyAccelNum++;
+	// }
+	// else
+	// {
+	// 	ContinuousEmptyAccelNum = 0;
+	// }
+	// bStop = ContinuousEmptyAccelNum > MaxContinuousEmptyAccelNum;
+	//
+	// if (FMath::Abs(LastAccelerationLength - CurrentAccelerationLength) > 300.f && CurrentAccelerationLength > 1000.f)
+	// {
+	// 	bCanTurn = true;
+	// }
+	// else
+	// {
+	// 	if (bCanTurn)
+	// 	{
+	// 		if (CanTurnFrameWindow > 10)
+	// 		{
+	// 			bCanTurn = false;
+	// 			CanTurnFrameWindow = 0;
+	// 		}
+	// 		else
+	// 		{
+	// 			CanTurnFrameWindow++;
+	// 		}
+	// 	}
+	// }
 	// CalcTurnAngleFinal()
-	
-	
-	LastAccelerationLength = AccelerationLength;
-	AccelerationLength = CurrentAccelerationLength;
+	// LastAccelerationLength = AccelerationLength;
+	// AccelerationLength = CurrentAccelerationLength;
 
 	UpdateTurn180();
 
@@ -156,25 +152,25 @@ void UWuKongAnimInstance::ResetRunStart()
 	bRunStartR = false;
 }
 
-void UWuKongAnimInstance::CalcTurnAngleFinal(
-	float InTurnAngle,
-	float InTurnAngle1,
-	float InTurnAngle2,
-	float InTurnAngleL1,
-	float InTurnAngleL2,
-	float InTurnAngleR1,
-	float InTurnAngleR2,
-	int32 InRotationNum,
-	bool bIsCircleL,
-	bool bIsCircleR,
-	float& OutTurnAngleL,
-	float& OutTurnAngleR,
-	float& OutTurnAngleFinal,
-	int32& OutRotationNum,
-	bool& bOutCircleL,
-	bool& bOutCircleR)
-{
-}
+// void UWuKongAnimInstance::CalcTurnAngleFinal(
+// 	float InTurnAngle,
+// 	float InTurnAngle1,
+// 	float InTurnAngle2,
+// 	float InTurnAngleL1,
+// 	float InTurnAngleL2,
+// 	float InTurnAngleR1,
+// 	float InTurnAngleR2,
+// 	int32 InRotationNum,
+// 	bool bIsCircleL,
+// 	bool bIsCircleR,
+// 	float& OutTurnAngleL,
+// 	float& OutTurnAngleR,
+// 	float& OutTurnAngleFinal,
+// 	int32& OutRotationNum,
+// 	bool& bOutCircleL,
+// 	bool& bOutCircleR)
+// {
+// }
 
 void UWuKongAnimInstance::ModifyRootMotionTransform(FTransform& InoutTransform)
 {

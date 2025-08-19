@@ -2,3 +2,25 @@
 
 
 #include "WKDaShengBrokenAnimInstance.h"
+
+#include "BlackWK/Character/WKAIDaShengCharacter.h"
+
+void UWKDaShengBrokenAnimInstance::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+
+	if (OwnerWK.IsValid())
+	{
+		OwnerDaSheng = Cast<AWKAIDaShengCharacter>(OwnerWK);
+	}
+}
+
+void UWKDaShengBrokenAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	if (IWKAIStateInterface* PawnStateInterface = Cast<IWKAIStateInterface>(OwnerDaSheng))
+	{
+		bHasSawTarget = PawnStateInterface->HasSawEnemyTarget();
+	}
+}

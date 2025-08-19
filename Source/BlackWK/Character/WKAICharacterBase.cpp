@@ -5,6 +5,7 @@
 
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
+#include "BlackWK/AI/WKAIStateInterface.h"
 #include "BlackWK/UI/WKFloatingStatusBarWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
@@ -82,6 +83,15 @@ void AWKAICharacterBase::BeginPlay()
 		// Tag change callbacks
 		AbilitySystemComponent->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Debuff.Stun")), EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::StunTagChanged);
 	}
+}
+
+bool AWKAICharacterBase::HasSawEnemyTarget()
+{
+	if (IWKAIStateInterface* StateController = Cast<IWKAIStateInterface>(GetController()))
+	{
+		return StateController->HasSawEnemyTarget();
+	}
+	return false;
 }
 
 void AWKAICharacterBase::HealthChanged(const FOnAttributeChangeData& Data)

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "WKCharacterBase.h"
+#include "BlackWK/AI/WKAIStateInterface.h"
 #include "WKAICharacterBase.generated.h"
 
 class UWidgetComponent;
@@ -11,13 +12,17 @@ struct FOnAttributeChangeData;
 class UWKFloatingStatusBarWidget;
 
 UCLASS()
-class BLACKWK_API AWKAICharacterBase : public AWKCharacterBase
+class BLACKWK_API AWKAICharacterBase : public AWKCharacterBase, public IWKAIStateInterface
 {
 	GENERATED_BODY()
 
 public:
 	AWKAICharacterBase(const FObjectInitializer& ObjectInitializer);
 	virtual void BeginPlay() override;
+
+	/// IWKAIStateInterface
+	virtual bool HasSawEnemyTarget() override;
+	/// ~IWKAIStateInterface
 
 protected:
 	// Attribute changed callbacks

@@ -47,23 +47,23 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ResetRunStart();
 
-	void CalcTurnAngleFinal(
-		float InTurnAngle,
-		float InTurnAngle1,
-		float InTurnAngle2,
-		float InTurnAngleL1,
-		float InTurnAngleL2,
-		float InTurnAngleR1,
-		float InTurnAngleR2,
-		int32 InRotationNum,
-		bool bIsCircleL,
-		bool bIsCircleR,
-		float& OutTurnAngleL,
-		float& OutTurnAngleR,
-		float& OutTurnAngleFinal,
-		int32& OutRotationNum,
-		bool& bOutCircleL,
-		bool& bOutCircleR);
+	// void CalcTurnAngleFinal(
+	// 	float InTurnAngle,
+	// 	float InTurnAngle1,
+	// 	float InTurnAngle2,
+	// 	float InTurnAngleL1,
+	// 	float InTurnAngleL2,
+	// 	float InTurnAngleR1,
+	// 	float InTurnAngleR2,
+	// 	int32 InRotationNum,
+	// 	bool bIsCircleL,
+	// 	bool bIsCircleR,
+	// 	float& OutTurnAngleL,
+	// 	float& OutTurnAngleR,
+	// 	float& OutTurnAngleFinal,
+	// 	int32& OutRotationNum,
+	// 	bool& bOutCircleL,
+	// 	bool& bOutCircleR);
 
 public:
 	virtual void ModifyRootMotionTransform(FTransform& InoutTransform) override;
@@ -104,53 +104,53 @@ protected:
 	bool bEnterTurnRight180 = false;
 
 
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngle1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngle2;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleAvg;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleL;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleL1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleL2;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleR;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleR1;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleR2;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float TurnAngleFinal;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	int32 RotationNum = 0;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float AccelerationLength;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	float LastAccelerationLength;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	int32 ContinuousEmptyAccelNum = 0;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	int32 MaxContinuousEmptyAccelNum = 5;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	bool bStop = false;
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngle1;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngle2;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleAvg;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleL;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleL1;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleL2;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleR;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleR1;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleR2;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float TurnAngleFinal;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// int32 RotationNum = 0;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float AccelerationLength;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// float LastAccelerationLength;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// int32 ContinuousEmptyAccelNum = 0;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// int32 MaxContinuousEmptyAccelNum = 5;
+	//
+	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
+	// bool bStop = false;
 	
 	// 起步
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
