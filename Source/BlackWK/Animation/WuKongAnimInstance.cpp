@@ -25,15 +25,19 @@ void UWuKongAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		return;
 	}
-	
-	// 移动速度
-	FVector Velocity = OwnerWuKong->GetVelocity();
-	VelocityPlane.X = Velocity.X;
-	VelocityPlane.Y = Velocity.Y;
-	VelocityPlaneLength = Velocity.Length();
 
-	UpdateInput();
-	UpdateRotation();
+	UpdateAimingValues();
+
+	// 更新移动数据
+	if (MovementState == EWKMovementState::Grounded)
+	{
+		bShouldMove = ShouldMoveCheck();
+		if (bShouldMove)
+		{
+			UpdateMovementValues();
+			UpdateRotationValues();	
+		}
+	}
 }
 
 void UWuKongAnimInstance::NativePostEvaluateAnimation()
@@ -47,52 +51,29 @@ void UWuKongAnimInstance::NativePostEvaluateAnimation()
 	}
 }
 
-void UWuKongAnimInstance::UpdateInput()
+void UWuKongAnimInstance::UpdateAimingValues()
 {
-	MoveInput = OwnerWuKong->GetMoveInput();
 }
 
-void UWuKongAnimInstance::UpdateRotation()
+void UWuKongAnimInstance::UpdateMovementValues()
+{
+	VelocityBlend = InterpVelocityBlend(VelocityBlend, CalculateVelocityBlend(), VelocityBlendInterpSpeed, GetWorld()->GetDeltaSeconds());
+	TurnBlend = CalculateTurnBlend();
+	RunPlayRate = Speed / 600.f;
+}
+
+bool UWuKongAnimInstance::ShouldMoveCheck() const
+{
+	return (bIsMoving && bHasMovementInput) || Speed > 150.f;
+}
+
+void UWuKongAnimInstance::UpdateRotationValues()
 {
 	// 两种计算TurnAngle的方法等价
 	FVector CurrentAcceleration = OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration();
 	FVector LocalAcceleration = UKismetMathLibrary::LessLess_VectorRotator(CurrentAcceleration, OwnerWuKong->GetActorRotation());
 	TurnAngle = UKismetMathLibrary::DegAtan2(LocalAcceleration.Y, LocalAcceleration.X);
 
-
-	// float CurrentAccelerationLength = CurrentAcceleration.Length();
-	// if (AccelerationLength + CurrentAccelerationLength == 0.f)
-	// {
-	// 	ContinuousEmptyAccelNum++;
-	// }
-	// else
-	// {
-	// 	ContinuousEmptyAccelNum = 0;
-	// }
-	// bStop = ContinuousEmptyAccelNum > MaxContinuousEmptyAccelNum;
-	//
-	// if (FMath::Abs(LastAccelerationLength - CurrentAccelerationLength) > 300.f && CurrentAccelerationLength > 1000.f)
-	// {
-	// 	bCanTurn = true;
-	// }
-	// else
-	// {
-	// 	if (bCanTurn)
-	// 	{
-	// 		if (CanTurnFrameWindow > 10)
-	// 		{
-	// 			bCanTurn = false;
-	// 			CanTurnFrameWindow = 0;
-	// 		}
-	// 		else
-	// 		{
-	// 			CanTurnFrameWindow++;
-	// 		}
-	// 	}
-	// }
-	// CalcTurnAngleFinal()
-	// LastAccelerationLength = AccelerationLength;
-	// AccelerationLength = CurrentAccelerationLength;
 
 	UpdateTurn180();
 
@@ -152,26 +133,6 @@ void UWuKongAnimInstance::ResetRunStart()
 	bRunStartR = false;
 }
 
-// void UWuKongAnimInstance::CalcTurnAngleFinal(
-// 	float InTurnAngle,
-// 	float InTurnAngle1,
-// 	float InTurnAngle2,
-// 	float InTurnAngleL1,
-// 	float InTurnAngleL2,
-// 	float InTurnAngleR1,
-// 	float InTurnAngleR2,
-// 	int32 InRotationNum,
-// 	bool bIsCircleL,
-// 	bool bIsCircleR,
-// 	float& OutTurnAngleL,
-// 	float& OutTurnAngleR,
-// 	float& OutTurnAngleFinal,
-// 	int32& OutRotationNum,
-// 	bool& bOutCircleL,
-// 	bool& bOutCircleR)
-// {
-// }
-
 void UWuKongAnimInstance::ModifyRootMotionTransform(FTransform& InoutTransform)
 {
 	// 提取Transform中的旋转，叠加到RootRotationCache
@@ -189,4 +150,40 @@ void UWuKongAnimInstance::ModifyRootMotionTransform(FTransform& InoutTransform)
 		RootRotationCache = InoutTransform.GetRotation() * RootRotationCache;
 		InoutTransform.SetRotation(FQuat::Identity);
 	}
+}
+
+float UWuKongAnimInstance::CalculateTurnBlend() const
+{
+	if (TurnAngle < 0.f)
+	{
+		return UKismetMathLibrary::MapRangeClamped(TurnAngle, -180.f, 0.f, 1.f, 0.f);
+	}
+	return UKismetMathLibrary::MapRangeClamped(TurnAngle, 0.f, 180.f, 0.f, 1.f);
+}
+
+FWKVelocityBlend UWuKongAnimInstance::CalculateVelocityBlend() const
+{
+	FRotator ActorRotation = OwnerWuKong->GetActorRotation();
+	// 速度在角色空间下的方向
+	FVector LocRelativeVelocityDir = ActorRotation.UnrotateVector(Velocity);
+	float Sum = FMath::Abs(LocRelativeVelocityDir.X) + FMath::Abs(LocRelativeVelocityDir.Y) + FMath::Abs(LocRelativeVelocityDir.Z);
+	FVector RelativeDirection = LocRelativeVelocityDir / Sum;
+
+	FWKVelocityBlend Result;
+	Result.F = FMath::Clamp(RelativeDirection.X, 0.f, 1.f);
+	Result.B = FMath::Abs(FMath::Clamp(RelativeDirection.X, -1.f, 0.f));
+	Result.L = FMath::Abs(FMath::Clamp(RelativeDirection.Y, -1.f, 0.f));
+	Result.R = FMath::Clamp(RelativeDirection.Y, 0.f, 1.f);
+
+	return Result;
+}
+
+FWKVelocityBlend UWuKongAnimInstance::InterpVelocityBlend(const FWKVelocityBlend& Current, const FWKVelocityBlend& Target, float InterpSpeed, float DeltaTime)
+{
+	FWKVelocityBlend Result;
+	Result.F = UKismetMathLibrary::FInterpTo(Current.F, Target.F, DeltaTime, InterpSpeed);
+	Result.B = UKismetMathLibrary::FInterpTo(Current.B, Target.B, DeltaTime, InterpSpeed);
+	Result.L = UKismetMathLibrary::FInterpTo(Current.L, Target.L, DeltaTime, InterpSpeed);
+	Result.R = UKismetMathLibrary::FInterpTo(Current.R, Target.R, DeltaTime, InterpSpeed);
+	return Result;
 }

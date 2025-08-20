@@ -5,6 +5,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "WKAICharacterBase.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/GameModes/WKGameMode.h"
 #include "BlackWK/Player/WKPlayerController.h"
@@ -16,6 +17,7 @@
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
 #include "BlackWK/UI/WKFloatingStatusBarWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AWKPlayerCharacterBase::AWKPlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -101,6 +103,7 @@ void AWKPlayerCharacterBase::InitInput()
 		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move);
 		EnhancedInputComponent->BindAction(IA_Move, ETriggerEvent::Completed, this, &ThisClass::Input_Move_Complete);
 		EnhancedInputComponent->BindAction(IA_LookMouse, ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse);
+		EnhancedInputComponent->BindAction(IA_Lock, ETriggerEvent::Started, this, &ThisClass::Input_Lock);
 
 		BindAbilitySystemComponentInput();
 	}
@@ -146,9 +149,41 @@ void AWKPlayerCharacterBase::Input_LookMouse(const FInputActionValue& InputActio
 	}
 }
 
+void AWKPlayerCharacterBase::Input_Lock(const FInputActionValue& InputActionValue)
+{
+	if (IsValid(LockTarget))
+	{
+		// 清除锁定
+		LockTarget = nullptr;
+		SetRotationMode(EWKRotationMode::VelocityDirection);
+	}
+	else
+	{
+		// 查找AI
+		TArray<AActor*> FindActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWKAICharacterBase::StaticClass(), FindActors);
+		if (!FindActors.IsEmpty())
+		{
+			LockTarget = Cast<AWKCharacterBase>(FindActors[0]);
+		}
+
+		if (IsValid(LockTarget))
+		{
+			SetRotationMode(EWKRotationMode::LookingDirection);
+		}
+	}
+}
+
 void AWKPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void AWKPlayerCharacterBase::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	UpdateLockTargetCameraLocation();
 }
 
 void AWKPlayerCharacterBase::PossessedBy(AController* NewController)
@@ -327,4 +362,60 @@ void AWKPlayerCharacterBase::BindAbilitySystemComponentInput()
 	
 		ASCInputBound = true;
 	}
+}
+
+void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
+{
+	if (HistoryLocationQueue.Num() < HistorySize)
+	{
+		HistoryLocationQueue.Add(GetActorLocation());
+	}
+	else
+	{
+		// 添加到队列，并且移除最队首的元素
+		HistoryLocationQueue.Add(GetActorLocation());
+		HistoryLocationQueue.RemoveAt(0);
+	}
+
+	// 计算历史中间位置
+	FVector CameraLocation;
+	for (const FVector& HistoryLocation : HistoryLocationQueue)
+	{
+		CameraLocation += HistoryLocation;
+	}
+	if (!HistoryLocationQueue.IsEmpty())
+	{
+		CameraLocation = CameraLocation / HistoryLocationQueue.Num();
+	}
+
+	FVector NewLocation = UKismetMathLibrary::VLerp(CameraBoom->GetComponentLocation(), CameraLocation, GetWorld()->GetDeltaSeconds() * InterpCameraLookingDirection);
+	NewLocation.Z = CameraBoom->GetComponentLocation().Z;
+	CameraBoom->SetWorldLocation(NewLocation);
+	
+	if (RotationMode == EWKRotationMode::LookingDirection)
+	{
+		if (!IsValid(LockTarget))
+		{
+			// 如果没有目标，切换回去
+			SetRotationMode(EWKRotationMode::VelocityDirection);
+		}
+		else
+		{
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), LockTarget->GetActorLocation());
+			GetController()->SetControlRotation(LookAtRotation);
+		}
+	}
+}
+
+void AWKPlayerCharacterBase::SetRotationMode(EWKRotationMode NewRotationMode)
+{
+	if (NewRotationMode != RotationMode)
+	{
+		OnRotationModeChanged(NewRotationMode);
+	}
+}
+
+void AWKPlayerCharacterBase::OnRotationModeChanged(EWKRotationMode NewRotationMode)
+{
+	RotationMode = NewRotationMode;
 }

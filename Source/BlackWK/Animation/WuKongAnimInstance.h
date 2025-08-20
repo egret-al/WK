@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WKAnimationTypes.h"
 #include "WKAnimInstanceBase.h"
 #include "WKAnimInstanceExtensionInterface.h"
 #include "WuKongAnimInstance.generated.h"
@@ -19,8 +20,10 @@ protected:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativePostEvaluateAnimation() override;
 
-	void UpdateInput();
-	void UpdateRotation();
+	void UpdateAimingValues();
+	void UpdateMovementValues();
+	bool ShouldMoveCheck() const;
+	void UpdateRotationValues();
 
 	// 向左进入大旋转
 	UFUNCTION(BlueprintCallable)
@@ -47,24 +50,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ResetRunStart();
 
-	// void CalcTurnAngleFinal(
-	// 	float InTurnAngle,
-	// 	float InTurnAngle1,
-	// 	float InTurnAngle2,
-	// 	float InTurnAngleL1,
-	// 	float InTurnAngleL2,
-	// 	float InTurnAngleR1,
-	// 	float InTurnAngleR2,
-	// 	int32 InRotationNum,
-	// 	bool bIsCircleL,
-	// 	bool bIsCircleR,
-	// 	float& OutTurnAngleL,
-	// 	float& OutTurnAngleR,
-	// 	float& OutTurnAngleFinal,
-	// 	int32& OutRotationNum,
-	// 	bool& bOutCircleL,
-	// 	bool& bOutCircleR);
-
 public:
 	virtual void ModifyRootMotionTransform(FTransform& InoutTransform) override;
 	
@@ -76,19 +61,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "RootMotion")
 	FQuat RootRotationCache = FQuat::Identity;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Input")
-	FVector2D MoveInput;
-	
 	/// Ref
 	UPROPERTY(BlueprintReadOnly, Category = "References")
 	TWeakObjectPtr<AWuKongPlayerCharacter> OwnerWuKong;
-
-	// 平面速度
-	UPROPERTY(BlueprintReadOnly, Category = "Move")
-	FVector2D VelocityPlane;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Move")
-	float VelocityPlaneLength;
 
 	// 旋转角度
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
@@ -102,55 +77,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
 	bool bEnterTurnRight180 = false;
-
-
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngle1;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngle2;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleAvg;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleL;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleL1;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleL2;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleR;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleR1;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleR2;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float TurnAngleFinal;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// int32 RotationNum = 0;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float AccelerationLength;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// float LastAccelerationLength;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// int32 ContinuousEmptyAccelNum = 0;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// int32 MaxContinuousEmptyAccelNum = 5;
-	//
-	// UPROPERTY(BlueprintReadOnly, Category = "Rotation")
-	// bool bStop = false;
 	
 	// 起步
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
@@ -159,6 +85,30 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
 	bool bRunStartR = false;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Move")
+	bool bShouldMove = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	FWKVelocityBlend VelocityBlend;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	float TurnBlend = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	float RunPlayRate = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig")
+	float VelocityBlendInterpSpeed = 12.f;
+
+private:
+	float CalculateTurnBlend() const;
+	
+	/** 计算速度混合度 */
+	FWKVelocityBlend CalculateVelocityBlend() const;
+	
+	/** 插值速度混合度 */
+	static FWKVelocityBlend InterpVelocityBlend(const FWKVelocityBlend& Current, const FWKVelocityBlend& Target, float InterpSpeed, float DeltaTime);
+	
 private:
 	FTransform TurnTransform180;
 

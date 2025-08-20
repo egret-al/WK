@@ -8,6 +8,7 @@
 #include "BlackWK/AbilitySystem/Abilities/WKGameplayAbility.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UWKCharacterMovementComponent>(CharacterMovementComponentName))
@@ -24,6 +25,34 @@ AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
 void AWKCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	OnBeginPlay();
+}
+
+void AWKCharacterBase::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	SetEssentialValues();
+	
+	CacheValues();
+}
+
+void AWKCharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+}
+
+FWKEssentialValue AWKCharacterBase::GetEssentialValues()
+{
+	FWKEssentialValue EssentialValue;
+	EssentialValue.Velocity = GetVelocity();
+	EssentialValue.Acceleration = Acceleration;
+	EssentialValue.MovementInput = GetCharacterMovement()->GetCurrentAcceleration();
+	EssentialValue.Speed = Speed;
+	EssentialValue.MovementInputAmount = MovementInputAmount;
+	EssentialValue.AimingRotation = GetControlRotation();
+	return EssentialValue;
 }
 
 UAbilitySystemComponent* AWKCharacterBase::GetAbilitySystemComponent() const
@@ -305,4 +334,48 @@ void AWKCharacterBase::SetHulu(float Hulu)
 	{
 		AttributeSetBase->SetHulu(Hulu);
 	}
+}
+
+void AWKCharacterBase::OnBeginPlay()
+{
+	TargetRotation = GetActorRotation();
+	LastVelocityRotation = GetActorRotation();
+	LastMovementInputRotation = GetActorRotation();
+	
+}
+
+void AWKCharacterBase::SetEssentialValues()
+{
+	Acceleration = CalculateAcceleration();
+
+	FVector Velocity = GetVelocity();
+	Speed = Velocity.Size2D();
+
+	bIsMoving = Speed > 1.f;
+	if (bIsMoving)
+	{
+		LastVelocityRotation = UKismetMathLibrary::MakeRotFromX(GetVelocity());
+	}
+
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	MovementInputAmount = MovementComponent->GetCurrentAcceleration().Length() / MovementComponent->GetMaxAcceleration();
+	bHasMovementInput = MovementInputAmount > 0.f;
+	if (bHasMovementInput)
+	{
+		LastMovementInputRotation = UKismetMathLibrary::MakeRotFromX(MovementComponent->GetCurrentAcceleration());
+	}
+
+	FRotator ControlRotation = GetControlRotation();
+	AimYawRate = FMath::Abs((ControlRotation.Yaw - PreviousAimYaw) / GetWorld()->GetDeltaSeconds());
+}
+
+void AWKCharacterBase::CacheValues()
+{
+	PreviousVelocity = GetVelocity();
+	PreviousAimYaw = GetControlRotation().Yaw;
+}
+
+FVector AWKCharacterBase::CalculateAcceleration() const
+{
+	return (GetVelocity() - PreviousVelocity) / GetWorld()->GetDeltaSeconds();
 }

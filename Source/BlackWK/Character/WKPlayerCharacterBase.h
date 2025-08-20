@@ -23,6 +23,7 @@ class BLACKWK_API AWKPlayerCharacterBase : public AWKCharacterBase
 public:
 	AWKPlayerCharacterBase(const FObjectInitializer& ObjectInitializer);
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void PossessedBy(AController* NewController) override;
 
 	USpringArmComponent* GetCameraBoom() const;
@@ -51,6 +52,7 @@ protected:
 	void Input_Move(const FInputActionValue& InputActionValue);
 	void Input_Move_Complete(const FInputActionValue& InputActionValue);
 	void Input_LookMouse(const FInputActionValue& InputActionValue);
+	void Input_Lock(const FInputActionValue& InputActionValue);
 
 	// Creates and initializes the floating status bar for heroes.
 	// Safe to call many times because it checks to make sure it only executes once.
@@ -64,6 +66,12 @@ protected:
 	// call ClientRestart which calls SetupPlayerInputComponent before the PlayerState is repped to the client so the PlayerState would be null in SetupPlayerInputComponent.
 	// Conversely, the PlayerState might be repped before the PlayerController calls ClientRestart so the Actor's InputComponent would be null in OnRep_PlayerState.
 	void BindAbilitySystemComponentInput();
+
+protected:
+	void UpdateLockTargetCameraLocation();
+	
+	void SetRotationMode(EWKRotationMode NewRotationMode);
+	virtual void OnRotationModeChanged(EWKRotationMode NewRotationMode);
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
@@ -104,6 +112,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
 	TObjectPtr<UInputAction> IA_LookMouse;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
+	TObjectPtr<UInputAction> IA_Lock;
 	
 	bool ASCInputBound = false;
 
@@ -111,4 +122,24 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	FVector2D MoveInput;
+
+protected:
+	// 锁定目标
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<AWKCharacterBase> LockTarget;
+
+	// 旋转模式
+	UPROPERTY(BlueprintReadOnly)
+	EWKRotationMode RotationMode = EWKRotationMode::VelocityDirection;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Camera")
+	float InterpCameraLookingDirection = 10.f;
+	
+	// 记录的过去的位置信息
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FVector> HistoryLocationQueue;
+
+	// 记录的历史数量
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Camera")
+	int32 HistorySize = 12;
 };

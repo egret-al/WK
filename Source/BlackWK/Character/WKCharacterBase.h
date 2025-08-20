@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
+#include "WKCharacterAnimInfoInterface.h"
 #include "BlackWK/AbilitySystem/Abilities/WKAbilityTypes.h"
 #include "GameFramework/Character.h"
 #include "WKCharacterBase.generated.h"
@@ -17,13 +18,19 @@ class UWKAbilitySystemComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AWKCharacterBase*, Character);
 
 UCLASS()
-class BLACKWK_API AWKCharacterBase : public ACharacter, public IAbilitySystemInterface
+class BLACKWK_API AWKCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWKCharacterAnimInfoInterface
 {
 	GENERATED_BODY()
 
 public:
 	AWKCharacterBase(const class FObjectInitializer& ObjectInitializer);
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
+	/// IWKCharacterAnimInfoInterface
+	virtual FWKEssentialValue GetEssentialValues() override;
+	/// ~IWKCharacterAnimInfoInterface
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -109,4 +116,23 @@ protected:
 	
 	TWeakObjectPtr<UWKAbilitySystemComponent> AbilitySystemComponent;
 	TWeakObjectPtr<UWKAttributeSetBase> AttributeSetBase;
+
+protected:
+	virtual void OnBeginPlay();
+	virtual void SetEssentialValues();
+	virtual void CacheValues();
+	FVector CalculateAcceleration() const;
+	
+private:
+	FVector PreviousVelocity;
+	float PreviousAimYaw = 0.f;
+	float AimYawRate = 0.f;
+	FVector Acceleration;
+	float Speed = 0.f;
+	bool bIsMoving = false;
+	FRotator TargetRotation;
+	FRotator LastVelocityRotation;
+	FRotator LastMovementInputRotation;
+	float MovementInputAmount = 0.f;
+	bool bHasMovementInput = false;
 };

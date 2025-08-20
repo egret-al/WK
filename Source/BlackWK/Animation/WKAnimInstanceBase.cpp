@@ -14,3 +14,35 @@ void UWKAnimInstanceBase::NativeInitializeAnimation()
 		OwnerWK = OwnerCharacter;
 	}
 }
+
+void UWKAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	UpdateCharacterInfo();
+}
+
+void UWKAnimInstanceBase::UpdateCharacterInfo()
+{
+	if (!OwnerWK.IsValid())
+	{
+		return;
+	}
+
+	if (IWKCharacterAnimInfoInterface* OwnerInterface = Cast<IWKCharacterAnimInfoInterface>(OwnerWK.Get()))
+	{
+		FWKEssentialValue EssentialValue = OwnerInterface->GetEssentialValues();
+		Velocity = EssentialValue.Velocity;
+		Acceleration = EssentialValue.Acceleration;
+		MovementInput = EssentialValue.MovementInput;
+		bIsMoving = EssentialValue.bIsMoving;
+		bHasMovementInput = EssentialValue.bHasMovementInput;
+		Speed = EssentialValue.Speed;
+		MovementInputAmount = EssentialValue.MovementInputAmount;
+		AimingRotation = EssentialValue.AimingRotation;
+
+		FWKCharacterState CharacterState = OwnerInterface->GetCharacterState();
+		MovementState = CharacterState.MovementState;
+		RotationMode = CharacterState.RotationMode;
+	}
+}
