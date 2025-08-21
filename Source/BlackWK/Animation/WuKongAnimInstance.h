@@ -92,13 +92,31 @@ protected:
 	FWKVelocityBlend VelocityBlend;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	EWKMovementDirection MovementDirection = EWKMovementDirection::Forward;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
 	float TurnBlend = 0.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Move")
 	float RunPlayRate = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
 	float VelocityBlendInterpSpeed = 12.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
+	float MoveFRThreshold = 70.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
+	float MoveFLThreshold = -70.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
+	float MoveBRThreshold = 110.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
+	float MoveBLThreshold = -110.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
+	float MoveBuffer = 5.f;
 
 private:
 	float CalculateTurnBlend() const;
@@ -108,6 +126,15 @@ private:
 	
 	/** 插值速度混合度 */
 	static FWKVelocityBlend InterpVelocityBlend(const FWKVelocityBlend& Current, const FWKVelocityBlend& Target, float InterpSpeed, float DeltaTime);
+
+	/** 计算移动方向 */
+	EWKMovementDirection CalculateMovementDirection() const;
+
+	/** 根据角度计算移动方向区间 */
+	static EWKMovementDirection CalculateQuadrant(EWKMovementDirection Current, float FRThreshold, float FLThreshold, float BRThreshold, float BLThreshold, float Buffer, float Angle);
+
+	/** 检查角度是否在范围内 */
+	static bool AngleInRange(float Angle, float MinAngle, float MaxAngle, float Buffer, bool bIncreaseBuffer);
 	
 private:
 	FTransform TurnTransform180;

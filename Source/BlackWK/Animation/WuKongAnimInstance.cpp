@@ -69,6 +69,8 @@ bool UWuKongAnimInstance::ShouldMoveCheck() const
 
 void UWuKongAnimInstance::UpdateRotationValues()
 {
+	MovementDirection = CalculateMovementDirection();
+	
 	// 两种计算TurnAngle的方法等价
 	FVector CurrentAcceleration = OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration();
 	FVector LocalAcceleration = UKismetMathLibrary::LessLess_VectorRotator(CurrentAcceleration, OwnerWuKong->GetActorRotation());
@@ -186,4 +188,45 @@ FWKVelocityBlend UWuKongAnimInstance::InterpVelocityBlend(const FWKVelocityBlend
 	Result.L = UKismetMathLibrary::FInterpTo(Current.L, Target.L, DeltaTime, InterpSpeed);
 	Result.R = UKismetMathLibrary::FInterpTo(Current.R, Target.R, DeltaTime, InterpSpeed);
 	return Result;
+}
+
+EWKMovementDirection UWuKongAnimInstance::CalculateMovementDirection() const
+{
+	// 以速度为导向的，只能是向前
+	if (RotationMode == EWKRotationMode::VelocityDirection)
+	{
+		return EWKMovementDirection::Forward;
+	}
+
+	// 朝向目标的，计算角度区间倾向
+	float AngleYaw = UKismetMathLibrary::NormalizedDeltaRotator(UKismetMathLibrary::MakeRotFromX(Velocity), AimingRotation).Yaw;
+	return CalculateQuadrant(MovementDirection, MoveFRThreshold, MoveFLThreshold, MoveBRThreshold, MoveBLThreshold, MoveBuffer, AngleYaw);
+}
+
+EWKMovementDirection UWuKongAnimInstance::CalculateQuadrant(EWKMovementDirection Current, float FRThreshold, float FLThreshold, float BRThreshold, float BLThreshold, float Buffer, float Angle)
+{
+	if (AngleInRange(Angle, FLThreshold, FRThreshold, Buffer, Current != EWKMovementDirection::Forward || Current != EWKMovementDirection::Backward))
+	{
+		return EWKMovementDirection::Forward;
+	}
+	
+	if (AngleInRange(Angle, FRThreshold, BRThreshold, Buffer, Current != EWKMovementDirection::Right || Current != EWKMovementDirection::Left))
+	{
+		return EWKMovementDirection::Right;
+	}
+
+	if (AngleInRange(Angle, BLThreshold, FLThreshold, Buffer, Current != EWKMovementDirection::Right || Current != EWKMovementDirection::Left))
+	{
+		return EWKMovementDirection::Left;
+	}
+	return EWKMovementDirection::Backward;
+}
+
+bool UWuKongAnimInstance::AngleInRange(float Angle, float MinAngle, float MaxAngle, float Buffer, bool bIncreaseBuffer)
+{
+	if (bIncreaseBuffer)
+	{
+		return UKismetMathLibrary::InRange_FloatFloat(Angle, MinAngle - Buffer, MaxAngle + Buffer);
+	}
+	return UKismetMathLibrary::InRange_FloatFloat(Angle, MinAngle + Buffer, MaxAngle - Buffer);
 }

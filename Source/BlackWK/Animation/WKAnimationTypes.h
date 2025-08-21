@@ -23,3 +23,12 @@ struct FWKVelocityBlend
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float R = 0.f;
 };
+
+UENUM(BlueprintType)
+enum class EWKMovementDirection : uint8
+{
+	Forward,
+	Right,
+	Left,
+	Backward
+};

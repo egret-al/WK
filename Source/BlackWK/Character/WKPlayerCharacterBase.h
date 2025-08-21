@@ -142,4 +142,25 @@ protected:
 	// 记录的历史数量
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Camera")
 	int32 HistorySize = 12;
+
+	// 按下锁定时的控制器旋转
+	UPROPERTY(BlueprintReadOnly)
+	FRotator LockTargetSnapshotControlRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Lock")
+	float LockInterpSpeed = 5.f;
+
+	// 锁定旋转过渡时间
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WKConfig|Lock")
+	float LockInterpDuration = 0.5f;
+
+	// 插值曲线 (编辑器里可指定，比如 EaseInOut)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WKConfig|Lock")
+	TObjectPtr<UCurveFloat> LockInterpCurve;
+
+private:
+	// 内部状态
+	float LockInterpTime = 0.0f;
+	bool bLockInterpInProgress = false;
+	FRotator LockStartRotation;
 };

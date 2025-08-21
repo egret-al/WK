@@ -155,6 +155,11 @@ void AWKPlayerCharacterBase::Input_Lock(const FInputActionValue& InputActionValu
 	{
 		// 清除锁定
 		LockTarget = nullptr;
+		LockTargetSnapshotControlRotation = FRotator();
+		LockStartRotation = LockTargetSnapshotControlRotation;
+		LockInterpTime = 0.0f;
+		bLockInterpInProgress = false;
+
 		SetRotationMode(EWKRotationMode::VelocityDirection);
 	}
 	else
@@ -169,6 +174,10 @@ void AWKPlayerCharacterBase::Input_Lock(const FInputActionValue& InputActionValu
 
 		if (IsValid(LockTarget))
 		{
+			LockTargetSnapshotControlRotation = GetControlRotation();
+			LockStartRotation = LockTargetSnapshotControlRotation;
+			bLockInterpInProgress = true;
+			
 			SetRotationMode(EWKRotationMode::LookingDirection);
 		}
 	}
@@ -401,8 +410,30 @@ void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
 		}
 		else
 		{
+			// 目标方向
 			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), LockTarget->GetActorLocation());
-			GetController()->SetControlRotation(LookAtRotation);
+
+			if (bLockInterpInProgress)
+			{
+				LockInterpTime += GetWorld()->GetDeltaSeconds();
+				float Alpha = FMath::Clamp(LockInterpTime / LockInterpDuration, 0.0f, 1.0f);
+
+				// 从曲线获取插值值
+				float CurveAlpha = LockInterpCurve ? LockInterpCurve->GetFloatValue(Alpha) : Alpha;
+
+				FRotator InterpRotation = FMath::Lerp(LockStartRotation, LookAtRotation, CurveAlpha);
+				GetController()->SetControlRotation(InterpRotation);
+
+				if (Alpha >= 1.0f)
+				{
+					bLockInterpInProgress = false;
+				}
+			}
+			else
+			{
+				// 过渡完成后，直接硬对准目标
+				GetController()->SetControlRotation(LookAtRotation);
+			}
 		}
 	}
 }
