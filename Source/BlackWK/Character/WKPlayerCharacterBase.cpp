@@ -375,32 +375,6 @@ void AWKPlayerCharacterBase::BindAbilitySystemComponentInput()
 
 void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
 {
-	if (HistoryLocationQueue.Num() < HistorySize)
-	{
-		HistoryLocationQueue.Add(GetActorLocation());
-	}
-	else
-	{
-		// 添加到队列，并且移除最队首的元素
-		HistoryLocationQueue.Add(GetActorLocation());
-		HistoryLocationQueue.RemoveAt(0);
-	}
-
-	// 计算历史中间位置
-	FVector CameraLocation;
-	for (const FVector& HistoryLocation : HistoryLocationQueue)
-	{
-		CameraLocation += HistoryLocation;
-	}
-	if (!HistoryLocationQueue.IsEmpty())
-	{
-		CameraLocation = CameraLocation / HistoryLocationQueue.Num();
-	}
-
-	FVector NewLocation = UKismetMathLibrary::VLerp(CameraBoom->GetComponentLocation(), CameraLocation, GetWorld()->GetDeltaSeconds() * InterpCameraLookingDirection);
-	NewLocation.Z = CameraBoom->GetComponentLocation().Z;
-	CameraBoom->SetWorldLocation(NewLocation);
-	
 	if (RotationMode == EWKRotationMode::LookingDirection)
 	{
 		if (!IsValid(LockTarget))
@@ -411,7 +385,8 @@ void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
 		else
 		{
 			// 目标方向
-			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), LockTarget->GetActorLocation());
+			FVector LockLocation = IWKLockableInterface::Execute_GetLockLocation(LockTarget);
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), LockLocation);
 
 			if (bLockInterpInProgress)
 			{

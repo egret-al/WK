@@ -94,6 +94,11 @@ bool AWKAICharacterBase::HasSawEnemyTarget()
 	return false;
 }
 
+FVector AWKAICharacterBase::GetLockLocation_Implementation()
+{
+	return GetActorLocation();
+}
+
 void AWKAICharacterBase::HealthChanged(const FOnAttributeChangeData& Data)
 {
 	float Health = Data.NewValue;

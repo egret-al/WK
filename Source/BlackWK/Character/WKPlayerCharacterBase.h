@@ -134,14 +134,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Camera")
 	float InterpCameraLookingDirection = 10.f;
-	
-	// 记录的过去的位置信息
-	UPROPERTY(BlueprintReadOnly)
-	TArray<FVector> HistoryLocationQueue;
-
-	// 记录的历史数量
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Camera")
-	int32 HistorySize = 12;
 
 	// 按下锁定时的控制器旋转
 	UPROPERTY(BlueprintReadOnly)
