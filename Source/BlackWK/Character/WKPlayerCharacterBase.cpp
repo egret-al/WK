@@ -15,6 +15,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
+#include "BlackWK/Animation/WKAnimInstanceExtensionInterface.h"
 #include "BlackWK/UI/WKFloatingStatusBarWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -138,6 +139,11 @@ void AWKPlayerCharacterBase::Input_LookMouse(const FInputActionValue& InputActio
 {
 	const FVector2D Value = InputActionValue.Get<FVector2D>();
 
+	if (RotationMode == EWKRotationMode::LookingDirection)
+	{
+		return;
+	}
+
 	if (Value.X != 0.0f)
 	{
 		AddControllerYawInput(Value.X);
@@ -161,6 +167,11 @@ void AWKPlayerCharacterBase::Input_Lock(const FInputActionValue& InputActionValu
 		bLockInterpInProgress = false;
 
 		SetRotationMode(EWKRotationMode::VelocityDirection);
+
+		if (IWKAnimInstanceExtensionInterface* AnimInstanceExtension = Cast<IWKAnimInstanceExtensionInterface>(GetMesh()->GetAnimInstance()))
+		{
+			AnimInstanceExtension->OnExitLockTarget();
+		}
 	}
 	else
 	{
@@ -179,6 +190,10 @@ void AWKPlayerCharacterBase::Input_Lock(const FInputActionValue& InputActionValu
 			bLockInterpInProgress = true;
 			
 			SetRotationMode(EWKRotationMode::LookingDirection);
+			if (IWKAnimInstanceExtensionInterface* AnimInstanceExtension = Cast<IWKAnimInstanceExtensionInterface>(GetMesh()->GetAnimInstance()))
+			{
+				AnimInstanceExtension->OnEnterLockTarget(LockTarget);
+			}
 		}
 	}
 }
@@ -406,8 +421,9 @@ void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
 			}
 			else
 			{
-				// 过渡完成后，直接硬对准目标
-				GetController()->SetControlRotation(LookAtRotation);
+				// 过渡完成后，加快插值速度
+				FRotator InterpRotation = FMath::Lerp(GetController()->GetControlRotation(), LookAtRotation, GetWorld()->GetDeltaSeconds() * LockInterpSpeed);
+				GetController()->SetControlRotation(InterpRotation);
 			}
 		}
 	}

@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "WKAnimInstanceExtensionInterface.generated.h"
 
+class AWKCharacterBase;
+
 UINTERFACE()
 class UWKAnimInstanceExtensionInterface : public UInterface
 {
@@ -18,4 +20,7 @@ class BLACKWK_API IWKAnimInstanceExtensionInterface
 
 public:
 	virtual void ModifyRootMotionTransform(FTransform& InoutTransform) {}
+
+	virtual void OnEnterLockTarget(AWKCharacterBase* LockableTarget) {}
+	virtual void OnExitLockTarget() {}
 };

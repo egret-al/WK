@@ -53,6 +53,10 @@ void UWuKongAnimInstance::NativePostEvaluateAnimation()
 
 void UWuKongAnimInstance::UpdateAimingValues()
 {
+	// 控制器和角色旋转差
+	FRotator DeltaRotator = UKismetMathLibrary::NormalizedDeltaRotator(AimingRotation, OwnerWuKong->GetActorRotation());
+	AimingAngle.X = DeltaRotator.Yaw;
+	AimingAngle.Y = DeltaRotator.Pitch;
 }
 
 void UWuKongAnimInstance::UpdateMovementValues()
@@ -75,12 +79,9 @@ void UWuKongAnimInstance::UpdateRotationValues()
 	FVector CurrentAcceleration = OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration();
 	FVector LocalAcceleration = UKismetMathLibrary::LessLess_VectorRotator(CurrentAcceleration, OwnerWuKong->GetActorRotation());
 	TurnAngle = UKismetMathLibrary::DegAtan2(LocalAcceleration.Y, LocalAcceleration.X);
-
+	SmoothedTurnAngle = UKismetMathLibrary::Lerp(SmoothedTurnAngle, TurnAngle,  GetWorld()->GetDeltaSeconds() * SmoothedTurnAngleInterpSpeed);
 
 	UpdateTurn180();
-
-	FString Msg = FString::Printf(TEXT("%f, %f|  %d %d %d %d"), TurnAngle, TurnAngle180, bEnterTurnLeft180, bEnterTurnRight180, bRunStartL, bRunStartR);
-	GEngine->AddOnScreenDebugMessage(1, 0.1f, FColor::Red, Msg);
 }
 
 void UWuKongAnimInstance::OnEnterTurnLeft180()
@@ -135,6 +136,12 @@ void UWuKongAnimInstance::ResetRunStart()
 	bRunStartR = false;
 }
 
+void UWuKongAnimInstance::OnTurnInPlaceComplete()
+{
+	bTurnInPlaceLeft = false;
+	bTurnInPlaceRight = false;
+}
+
 void UWuKongAnimInstance::ModifyRootMotionTransform(FTransform& InoutTransform)
 {
 	// 提取Transform中的旋转，叠加到RootRotationCache
@@ -152,6 +159,47 @@ void UWuKongAnimInstance::ModifyRootMotionTransform(FTransform& InoutTransform)
 		RootRotationCache = InoutTransform.GetRotation() * RootRotationCache;
 		InoutTransform.SetRotation(FQuat::Identity);
 	}
+}
+
+void UWuKongAnimInstance::OnEnterLockTarget(AWKCharacterBase* LockableTarget)
+{
+	bHasLockTarget = true;
+
+	// 检查与目标的角度差
+	FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(OwnerWuKong->GetActorLocation(), LockableTarget->GetActorLocation());
+	float RotationYaw = OwnerWuKong->GetActorRotation().Yaw;
+	// 角度范围转换到[0,360]
+	if (RotationYaw < 0)
+	{
+		RotationYaw += 360.f;
+	}
+	float LookAtRotationYaw = LookAtRotation.Yaw;
+	if (LookAtRotationYaw < 0)
+	{
+		LookAtRotationYaw += 360.f;
+	}
+	TurnInPlaceYaw = FMath::Abs(RotationYaw - LookAtRotationYaw);
+	// 触发旋转
+	if (TurnInPlaceYaw >= 0.f && TurnInPlaceYaw < 180.f)
+	{
+		// 角色需要向右旋转
+		bTurnInPlaceLeft = false;
+		bTurnInPlaceRight = true;
+	}
+	else
+	{
+		// 角色需要向左旋转
+		bTurnInPlaceLeft = true;
+		bTurnInPlaceRight = false;
+	}
+}
+
+void UWuKongAnimInstance::OnExitLockTarget()
+{
+	bHasLockTarget = false;
+
+	bTurnInPlaceLeft = false;
+	bTurnInPlaceRight = false;
 }
 
 float UWuKongAnimInstance::CalculateTurnBlend() const

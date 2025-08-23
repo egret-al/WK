@@ -50,8 +50,16 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ResetRunStart();
 
+	// 原地旋转播放完毕后调用
+	UFUNCTION(BlueprintCallable)
+	void OnTurnInPlaceComplete();
+
 public:
+	/// IWKAnimInstanceExtensionInterface
 	virtual void ModifyRootMotionTransform(FTransform& InoutTransform) override;
+	virtual void OnEnterLockTarget(AWKCharacterBase* LockableTarget) override;
+	virtual void OnExitLockTarget() override;
+	/// ~IWKAnimInstanceExtensionInterface
 	
 protected:
 	// 是否忽略RootMotion的旋转
@@ -70,6 +78,12 @@ protected:
 	float TurnAngle = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	float SmoothedTurnAngle = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
+	float SmoothedTurnAngleInterpSpeed = 2.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
 	float TurnAngle180 = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
@@ -85,6 +99,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotation")
 	bool bRunStartR = false;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
+	bool bTurnInPlaceLeft = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
+	bool bTurnInPlaceRight = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
+	float TurnInPlaceYaw = 0.f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Move")
 	bool bShouldMove = false;
 
@@ -99,6 +122,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Move")
 	float RunPlayRate = 1.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Lock Target")
+	bool bHasLockTarget = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
 	float VelocityBlendInterpSpeed = 12.f;
@@ -118,6 +144,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Move")
 	float MoveBuffer = 5.f;
 
+	// X：控制器与角色的旋转差的Yaw	Y：控制器与角色的旋转差的Pitch
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+	FVector2D AimingAngle;
+
 private:
 	float CalculateTurnBlend() const;
 	
@@ -135,7 +165,7 @@ private:
 
 	/** 检查角度是否在范围内 */
 	static bool AngleInRange(float Angle, float MinAngle, float MaxAngle, float Buffer, bool bIncreaseBuffer);
-	
+
 private:
 	FTransform TurnTransform180;
 
