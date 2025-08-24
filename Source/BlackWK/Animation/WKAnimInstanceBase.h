@@ -7,6 +7,7 @@
 #include "BlackWK/Character/WKCharacterTypes.h"
 #include "WKAnimInstanceBase.generated.h"
 
+class UAbilitySystemComponent;
 class AWKCharacterBase;
 /**
  * 
@@ -16,6 +17,9 @@ class BLACKWK_API UWKAnimInstanceBase : public UAnimInstance
 {
 	GENERATED_BODY()
 
+public:
+	virtual void InitializeWithAbilitySystem(UAbilitySystemComponent* ASC);
+	
 protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;

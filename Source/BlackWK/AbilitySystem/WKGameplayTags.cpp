@@ -1,0 +1,33 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "WKGameplayTags.h"
+
+namespace WKGameplayTags
+{
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Gameplay_AbilityInputBlocked, "InputTag.Gameplay.AbilityInputBlocked", "阻止GA输入");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Move, "InputTag.Move", "角色基本移动");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Look_Mouse, "InputTag.Look.Mouse", "控制视角移动");
+
+	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString)
+	{
+		const UGameplayTagsManager& Manager = UGameplayTagsManager::Get();
+		FGameplayTag Tag = Manager.RequestGameplayTag(FName(*TagString), false);
+
+		if (!Tag.IsValid() && bMatchPartialString)
+		{
+			FGameplayTagContainer AllTags;
+			Manager.RequestAllGameplayTags(AllTags, true);
+
+			for (const FGameplayTag& TestTag : AllTags)
+			{
+				if (TestTag.ToString().Contains(TagString))
+				{
+					Tag = TestTag;
+					break;
+				}
+			}
+		}
+		return Tag;
+	}
+}

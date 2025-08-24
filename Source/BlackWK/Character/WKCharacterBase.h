@@ -4,9 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
-#include "GameplayTagContainer.h"
 #include "WKCharacterAnimInfoInterface.h"
-#include "BlackWK/AbilitySystem/Abilities/WKAbilityTypes.h"
 #include "GameFramework/Character.h"
 #include "WKCharacterBase.generated.h"
 
@@ -33,21 +31,7 @@ public:
 	/// ~IWKCharacterAnimInfoInterface
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
-	virtual void RemoveCharacterAbilities();
-	virtual void Die();
-	
-	UFUNCTION(BlueprintCallable)
-	virtual void FinishDying();
-
-	UFUNCTION(BlueprintCallable)
-	virtual bool IsAlive() const;
-
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter")
-	virtual int32 GetAbilityLevel(EWKAbilityInputID AbilityID) const;
-
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	int32 GetCharacterLevel() const;
+	UWKAbilitySystemComponent* GetWKAbilitySystemComponent() const;
 
 	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
 	float GetHealth() const;
@@ -86,10 +70,6 @@ public:
 	FCharacterDiedDelegate OnCharacterDiedDelegate;
 
 protected:
-	virtual void AddCharacterAbilities();
-	virtual void InitializeAttributes();
-	virtual void AddStartupEffects();
-	
 	virtual void SetHealth(float Health);
 	virtual void SetMana(float Mana);
 	virtual void SetStamina(float Stamina);
@@ -111,9 +91,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WKCharacter|Abilities")
 	TArray<TSubclassOf<UGameplayEffect>> StartupEffects;
 
-	FGameplayTag DeadTag;
-	FGameplayTag EffectRemoveOnDeathTag;
-	
 	TWeakObjectPtr<UWKAbilitySystemComponent> AbilitySystemComponent;
 	TWeakObjectPtr<UWKAttributeSetBase> AttributeSetBase;
 

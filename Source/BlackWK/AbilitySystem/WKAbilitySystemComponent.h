@@ -6,18 +6,32 @@
 #include "AbilitySystemComponent.h"
 #include "WKAbilitySystemComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReceivedDamageDelegate, UWKAbilitySystemComponent*, SourceASC, float, UnmitigatedDamage, float, MitigatedDamage);
-
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BLACKWK_API UWKAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 
 public:
-	virtual void ReceiveDamage(UWKAbilitySystemComponent* SourceASC, float UnmitigatedDamage, float MitigatedDamage);
+	UWKAbilitySystemComponent();
+	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
+
+	void ProcessAbilityInput();
+	void ClearAbilityInput();
+
+	void AbilityInputTagPressed(const FGameplayTag& InputTag);
+	void AbilityInputTagReleased(const FGameplayTag& InputTag);
+
+	FSimpleMulticastDelegate& WKAbilityReplicatedEventDelegate(EAbilityGenericReplicatedEvent::Type EventType, FGameplayAbilitySpecHandle AbilityHandle, FPredictionKey AbilityOriginalPredictionKey);
 	
-public:
-	bool bCharacterAbilitiesGiven = false;
-	bool bStartupEffectsApplied = false;
-	FReceivedDamageDelegate ReceivedDamage;
+protected:
+	/** 尝试在生成时就去激活可以激活的GA */
+	void TryActivateAbilitiesOnSpawn();
+
+	virtual void AbilitySpecInputPressed(FGameplayAbilitySpec& Spec) override;
+	virtual void AbilitySpecInputReleased(FGameplayAbilitySpec& Spec) override;
+
+protected:
+	TArray<FGameplayAbilitySpecHandle> InputPressedSpecHandles;
+	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
+	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
 };

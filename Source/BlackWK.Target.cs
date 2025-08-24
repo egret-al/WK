@@ -8,6 +8,7 @@ public class BlackWKTarget : TargetRules
 	public BlackWKTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
+		bWithPushModel = true;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
 		ExtraModuleNames.Add("BlackWK");

@@ -23,7 +23,8 @@ public class BlackWK : ModuleRules
 			"GameplayTasks",
 			"GameplayMessageRuntime",
 			
-			"AIModule"
+			"AIModule",
+			"NetCore"
 		});
 	}
 }

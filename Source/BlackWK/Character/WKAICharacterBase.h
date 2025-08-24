@@ -34,7 +34,7 @@ protected:
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
 
 	// Tag change callbacks
-	virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	// virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
 protected:
 	// Actual hard pointer to AbilitySystemComponent

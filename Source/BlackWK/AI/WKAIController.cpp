@@ -5,5 +5,6 @@
 
 AWKAIController::AWKAIController()
 {
+	bWantsPlayerState = true;
 }
 

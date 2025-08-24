@@ -33,8 +33,9 @@ public:
 protected:
 	// Server only
 	virtual void OnPossess(APawn* InPawn) override;
-
 	virtual void OnRep_PlayerState() override;
+
+	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 	
 protected:
 	UPROPERTY(EditAnywhere, Category = "WKConfig|UI")

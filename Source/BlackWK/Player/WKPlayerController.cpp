@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "WKPlayerState.h"
+#include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/Character/WKCharacterBase.h"
 #include "BlackWK/UI/WKDamageTextWidgetComponent.h"
 #include "BlackWK/UI/WKWidgetHUD.h"
@@ -112,4 +113,17 @@ void AWKPlayerController::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	CreateHUD();
+}
+
+void AWKPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
+{
+	if (AWKCharacterBase* CharacterBase = Cast<AWKCharacterBase>(GetPawn()))
+	{
+		if (UWKAbilitySystemComponent* ASC = CharacterBase->GetWKAbilitySystemComponent())
+		{
+			ASC->ProcessAbilityInput();
+		}
+	}
+	
+	Super::PostProcessInput(DeltaTime, bGamePaused);
 }

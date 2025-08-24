@@ -8,6 +8,9 @@
 #include "GameFramework/PlayerState.h"
 #include "WKPlayerState.generated.h"
 
+class UWKPawnData;
+class UWKCombatSet;
+class UWKHealthSet;
 struct FOnAttributeChangeData;
 class UWKAttributeSetBase;
 class UWKAbilitySystemComponent;
@@ -19,10 +22,18 @@ class BLACKWK_API AWKPlayerState : public APlayerState, public IAbilitySystemInt
 
 public:
 	AWKPlayerState();
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	UWKAttributeSetBase* GetAttributeSetBase() const;
+
+	void SetPawnData(const UWKPawnData* InPawnData);
+
+	template<typename T>
+	const T* GetPawnData() const
+	{
+		return Cast<T>(PawnData);
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "WKPlayerState")
 	bool IsAlive() const;
@@ -109,14 +120,6 @@ protected:
 	virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 	
 protected:
-	UPROPERTY()
-	UWKAbilitySystemComponent* AbilitySystemComponent;
-
-	UPROPERTY()
-	UWKAttributeSetBase* AttributeSetBase;
-
-	FGameplayTag DeadTag;
-
 	FDelegateHandle HealthChangedDelegateHandle;
 	FDelegateHandle MaxHealthChangedDelegateHandle;
 	FDelegateHandle HealthRegenRateChangedDelegateHandle;
@@ -132,4 +135,22 @@ protected:
 	FDelegateHandle XPChangedDelegateHandle;
 	FDelegateHandle GoldChangedDelegateHandle;
 	FDelegateHandle CharacterLevelChangedDelegateHandle;
+
+protected:
+	UFUNCTION()
+	void OnRep_PawnData();
+
+protected:
+	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_PawnData)
+	TObjectPtr<const UWKPawnData> PawnData;
+	
+protected:
+	UPROPERTY(VisibleAnywhere, Category = "ASC")
+	TObjectPtr<UWKAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "ASC")
+	TObjectPtr<UWKHealthSet> HealthSet;
+
+	UPROPERTY(VisibleAnywhere, Category = "ASC")
+	TObjectPtr<UWKCombatSet> CombatSet;
 };

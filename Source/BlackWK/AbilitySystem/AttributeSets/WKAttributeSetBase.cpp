@@ -141,15 +141,15 @@ void UWKAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 			// This prevents damage being added to dead things and replaying death animations
 			bool WasAlive = true;
 
-			if (TargetCharacter)
-			{
-				WasAlive = TargetCharacter->IsAlive();
-			}
-
-			if (!TargetCharacter->IsAlive())
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("%s() %s is NOT alive when receiving damage"), TEXT(__FUNCTION__), *TargetCharacter->GetName());
-			}
+			// if (TargetCharacter)
+			// {
+			// 	WasAlive = TargetCharacter->IsAlive();
+			// }
+			//
+			// if (!TargetCharacter->IsAlive())
+			// {
+			// 	//UE_LOG(LogTemp, Warning, TEXT("%s() %s is NOT alive when receiving damage"), TEXT(__FUNCTION__), *TargetCharacter->GetName());
+			// }
 
 			// Apply the health change and then clamp it
 			const float NewHealth = GetHealth() - LocalDamageDone;
@@ -170,32 +170,32 @@ void UWKAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 					}
 				}
 
-				if (!TargetCharacter->IsAlive())
-				{
-					// TargetCharacter was alive before this damage and now is not alive, give XP and Gold bounties to Source.
-					// Don't give bounty to self.
-					if (SourceController != TargetController)
-					{
-						// Create a dynamic instant Gameplay Effect to give the bounties
-						UGameplayEffect* GEBounty = NewObject<UGameplayEffect>(GetTransientPackage(), FName(TEXT("Bounty")));
-						GEBounty->DurationPolicy = EGameplayEffectDurationType::Instant;
-
-						int32 Idx = GEBounty->Modifiers.Num();
-						GEBounty->Modifiers.SetNum(Idx + 2);
-
-						FGameplayModifierInfo& InfoXP = GEBounty->Modifiers[Idx];
-						InfoXP.ModifierMagnitude = FScalableFloat(GetXPBounty());
-						InfoXP.ModifierOp = EGameplayModOp::Additive;
-						InfoXP.Attribute = GetXPAttribute();
-
-						FGameplayModifierInfo& InfoGold = GEBounty->Modifiers[Idx + 1];
-						InfoGold.ModifierMagnitude = FScalableFloat(GetGoldBounty());
-						InfoGold.ModifierOp = EGameplayModOp::Additive;
-						InfoGold.Attribute = GetGoldAttribute();
-
-						Source->ApplyGameplayEffectToSelf(GEBounty, 1.0f, Source->MakeEffectContext());
-					}
-				}
+				// if (!TargetCharacter->IsAlive())
+				// {
+				// 	// TargetCharacter was alive before this damage and now is not alive, give XP and Gold bounties to Source.
+				// 	// Don't give bounty to self.
+				// 	if (SourceController != TargetController)
+				// 	{
+				// 		// Create a dynamic instant Gameplay Effect to give the bounties
+				// 		UGameplayEffect* GEBounty = NewObject<UGameplayEffect>(GetTransientPackage(), FName(TEXT("Bounty")));
+				// 		GEBounty->DurationPolicy = EGameplayEffectDurationType::Instant;
+				//
+				// 		int32 Idx = GEBounty->Modifiers.Num();
+				// 		GEBounty->Modifiers.SetNum(Idx + 2);
+				//
+				// 		FGameplayModifierInfo& InfoXP = GEBounty->Modifiers[Idx];
+				// 		InfoXP.ModifierMagnitude = FScalableFloat(GetXPBounty());
+				// 		InfoXP.ModifierOp = EGameplayModOp::Additive;
+				// 		InfoXP.Attribute = GetXPAttribute();
+				//
+				// 		FGameplayModifierInfo& InfoGold = GEBounty->Modifiers[Idx + 1];
+				// 		InfoGold.ModifierMagnitude = FScalableFloat(GetGoldBounty());
+				// 		InfoGold.ModifierOp = EGameplayModOp::Additive;
+				// 		InfoGold.Attribute = GetGoldAttribute();
+				//
+				// 		Source->ApplyGameplayEffectToSelf(GEBounty, 1.0f, Source->MakeEffectContext());
+				// 	}
+				// }
 			}
 		}
 	}// Damage

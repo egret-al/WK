@@ -5,6 +5,10 @@
 
 #include "BlackWK/Character/WKCharacterBase.h"
 
+void UWKAnimInstanceBase::InitializeWithAbilitySystem(UAbilitySystemComponent* ASC)
+{
+}
+
 void UWKAnimInstanceBase::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();

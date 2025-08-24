@@ -9,6 +9,7 @@
 #include "BlackWK/UI/WKFloatingStatusBarWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 
 AWKAICharacterBase::AWKAICharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -53,10 +54,7 @@ void AWKAICharacterBase::BeginPlay()
 
 	if (AbilitySystemComponent.IsValid())
 	{
-		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-		InitializeAttributes();
-		AddStartupEffects();
-		AddCharacterAbilities();
+		AbilitySystemComponent->InitAbilityActorInfo(GetPlayerState(), this);
 
 		// Setup FloatingStatusBar UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
 		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -81,7 +79,7 @@ void AWKAICharacterBase::BeginPlay()
 		HealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHealthAttribute()).AddUObject(this, &ThisClass::HealthChanged);
 
 		// Tag change callbacks
-		AbilitySystemComponent->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Debuff.Stun")), EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::StunTagChanged);
+		// AbilitySystemComponent->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Debuff.Stun")), EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::StunTagChanged);
 	}
 }
 
@@ -110,22 +108,22 @@ void AWKAICharacterBase::HealthChanged(const FOnAttributeChangeData& Data)
 	}
 
 	// If the minion died, handle death
-	if (!IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))
-	{
-		Die();
-	}
+	// if (!IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))
+	// {
+	// 	Die();
+	// }
 }
 
-void AWKAICharacterBase::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
-{
-	if (NewCount > 0)
-	{
-		FGameplayTagContainer AbilityTagsToCancel;
-		AbilityTagsToCancel.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability")));
-
-		FGameplayTagContainer AbilityTagsToIgnore;
-		AbilityTagsToIgnore.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.NotCanceledByStun")));
-
-		AbilitySystemComponent->CancelAbilities(&AbilityTagsToCancel, &AbilityTagsToIgnore);
-	}
-}
+// void AWKAICharacterBase::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+// {
+// 	if (NewCount > 0)
+// 	{
+// 		FGameplayTagContainer AbilityTagsToCancel;
+// 		AbilityTagsToCancel.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability")));
+//
+// 		FGameplayTagContainer AbilityTagsToIgnore;
+// 		AbilityTagsToIgnore.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.NotCanceledByStun")));
+//
+// 		AbilitySystemComponent->CancelAbilities(&AbilityTagsToCancel, &AbilityTagsToIgnore);
+// 	}
+// }

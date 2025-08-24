@@ -4,11 +4,15 @@
 #include "WKPlayerState.h"
 
 #include "WKPlayerController.h"
+#include "BlackWK/AbilitySystem/WKAbilitySet.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
-#include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
+#include "BlackWK/AbilitySystem/AttributeSets/WKHealthSet.h"
+#include "BlackWK/AbilitySystem/AttributeSets/WKCombatSet.h"
+#include "BlackWK/Character/WKPawnData.h"
 #include "BlackWK/Character/WKPlayerCharacterBase.h"
 #include "BlackWK/UI/WKFloatingStatusBarWidget.h"
 #include "BlackWK/UI/WKWidgetHUD.h"
+#include "Net/UnrealNetwork.h"
 
 AWKPlayerState::AWKPlayerState()
 {
@@ -16,37 +20,52 @@ AWKPlayerState::AWKPlayerState()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
-	AttributeSetBase = CreateDefaultSubobject<UWKAttributeSetBase>(TEXT("AttributeSetBase"));
-
 	NetUpdateFrequency = 100.0f;
-	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
+
+	HealthSet = CreateDefaultSubobject<UWKHealthSet>(TEXT("HealthSet"));
+	CombatSet = CreateDefaultSubobject<UWKCombatSet>(TEXT("CombatSet"));
+}
+
+void AWKPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams SharedParams;
+	SharedParams.bIsPushBased = true;
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PawnData, SharedParams);
 }
 
 void AWKPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
 
-		if (AbilitySystemComponent)
+	if (AbilitySystemComponent)
 	{
 		// Attribute change callbacks
-		HealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHealthAttribute()).AddUObject(this, &AWKPlayerState::HealthChanged);
-		MaxHealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetMaxHealthAttribute()).AddUObject(this, &AWKPlayerState::MaxHealthChanged);
-		HealthRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHealthRegenRateAttribute()).AddUObject(this, &AWKPlayerState::HealthRegenRateChanged);
-		ManaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetManaAttribute()).AddUObject(this, &AWKPlayerState::ManaChanged);
-		MaxManaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetMaxManaAttribute()).AddUObject(this, &AWKPlayerState::MaxManaChanged);
-		ManaRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetManaRegenRateAttribute()).AddUObject(this, &AWKPlayerState::ManaRegenRateChanged);
-		StaminaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetStaminaAttribute()).AddUObject(this, &AWKPlayerState::StaminaChanged);
-		MaxStaminaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetMaxStaminaAttribute()).AddUObject(this, &AWKPlayerState::MaxStaminaChanged);
-		StaminaRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetStaminaRegenRateAttribute()).AddUObject(this, &AWKPlayerState::StaminaRegenRateChanged);
-		HuluChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHuluAttribute()).AddUObject(this, &AWKPlayerState::HuluChanged);
-		MaxHuluChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetMaxHuluAttribute()).AddUObject(this, &AWKPlayerState::MaxHuluChanged);
-		HuluRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHuluRegenRateAttribute()).AddUObject(this, &AWKPlayerState::HuluRegenRateChanged);
-		XPChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetXPAttribute()).AddUObject(this, &AWKPlayerState::XPChanged);
-		GoldChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetGoldAttribute()).AddUObject(this, &AWKPlayerState::GoldChanged);
-		CharacterLevelChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetCharacterLevelAttribute()).AddUObject(this, &AWKPlayerState::CharacterLevelChanged);
+		HealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetHealthAttribute()).AddUObject(this, &AWKPlayerState::HealthChanged);
+		MaxHealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetMaxHealthAttribute()).AddUObject(this, &AWKPlayerState::MaxHealthChanged);
+		HealthRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetHealthRegenRateAttribute()).AddUObject(this, &AWKPlayerState::HealthRegenRateChanged);
+		ManaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetManaAttribute()).AddUObject(this, &AWKPlayerState::ManaChanged);
+		MaxManaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetMaxManaAttribute()).AddUObject(this, &AWKPlayerState::MaxManaChanged);
+		ManaRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetManaRegenRateAttribute()).AddUObject(this, &AWKPlayerState::ManaRegenRateChanged);
+		StaminaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetStaminaAttribute()).AddUObject(this, &AWKPlayerState::StaminaChanged);
+		MaxStaminaChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetMaxStaminaAttribute()).AddUObject(this, &AWKPlayerState::MaxStaminaChanged);
+		StaminaRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetStaminaRegenRateAttribute()).AddUObject(this, &AWKPlayerState::StaminaRegenRateChanged);
+		HuluChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetHuluAttribute()).AddUObject(this, &AWKPlayerState::HuluChanged);
+		MaxHuluChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetMaxHuluAttribute()).AddUObject(this, &AWKPlayerState::MaxHuluChanged);
+		HuluRegenRateChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetHuluRegenRateAttribute()).AddUObject(this, &AWKPlayerState::HuluRegenRateChanged);
+		XPChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetXPAttribute()).AddUObject(this, &AWKPlayerState::XPChanged);
+		GoldChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetGoldAttribute()).AddUObject(this, &AWKPlayerState::GoldChanged);
+		CharacterLevelChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(HealthSet->GetCharacterLevelAttribute()).AddUObject(this, &AWKPlayerState::CharacterLevelChanged);
 
 		// Tag change callbacks
 		AbilitySystemComponent->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Debuff.Stun")), EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AWKPlayerState::StunTagChanged);
+	}
+
+	if (HasAuthority())
+	{
+		//TODO
+		SetPawnData(PawnData);
 	}
 }
 
@@ -55,9 +74,36 @@ UAbilitySystemComponent* AWKPlayerState::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-UWKAttributeSetBase* AWKPlayerState::GetAttributeSetBase() const
+void AWKPlayerState::SetPawnData(const UWKPawnData* InPawnData)
 {
-	return AttributeSetBase;
+	check(InPawnData);
+
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		return;
+	}
+
+	// if (PawnData)
+	// {
+	// 	return;
+	// }
+
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PawnData, this);
+	PawnData = InPawnData;
+
+	if (GetNetMode() == NM_Standalone)
+	{
+		OnRep_PawnData();
+	}
+
+	for (const TObjectPtr<UWKAbilitySet> AbilitySet : PawnData->AbilitySets)
+	{
+		if (AbilitySet.Get())
+		{
+			AbilitySet->GiveToAbilitySystem(AbilitySystemComponent, nullptr);
+		}
+	}
+	ForceNetUpdate();
 }
 
 bool AWKPlayerState::IsAlive() const
@@ -80,98 +126,98 @@ void AWKPlayerState::ShowAbilityConfirmCancelText(bool ShowText)
 
 float AWKPlayerState::GetHealth() const
 {
-	return AttributeSetBase->GetHealth();
+	return HealthSet->GetHealth();
 }
 
 float AWKPlayerState::GetMaxHealth() const
 {
-	return AttributeSetBase->GetMaxHealth();
+	return HealthSet->GetMaxHealth();
 }
 
 float AWKPlayerState::GetHealthRegenRate() const
 {
-	return AttributeSetBase->GetHealthRegenRate();
+	return HealthSet->GetHealthRegenRate();
 }
 
 float AWKPlayerState::GetMana() const
 {
-	return AttributeSetBase->GetMana();
+	return HealthSet->GetMana();
 }
 
 float AWKPlayerState::GetMaxMana() const
 {
-	return AttributeSetBase->GetMaxMana();
+	return HealthSet->GetMaxMana();
 }
 
 float AWKPlayerState::GetManaRegenRate() const
 {
-	return AttributeSetBase->GetManaRegenRate();
+	return HealthSet->GetManaRegenRate();
 }
 
 float AWKPlayerState::GetStamina() const
 {
-	return AttributeSetBase->GetStamina();
+	return HealthSet->GetStamina();
 }
 
 float AWKPlayerState::GetMaxStamina() const
 {
-	return AttributeSetBase->GetMaxStamina();
+	return HealthSet->GetMaxStamina();
 }
 
 float AWKPlayerState::GetStaminaRegenRate() const
 {
-	return AttributeSetBase->GetStaminaRegenRate();
+	return HealthSet->GetStaminaRegenRate();
 }
 
 float AWKPlayerState::GetHulu() const
 {
-	return AttributeSetBase->GetHulu();
+	return HealthSet->GetHulu();
 }
 
 float AWKPlayerState::GetMaxHulu() const
 {
-	return AttributeSetBase->GetMaxHulu();
+	return HealthSet->GetMaxHulu();
 }
 
 float AWKPlayerState::GetHuluRegenRate() const
 {
-	return AttributeSetBase->GetHuluRegenRate();
+	return HealthSet->GetHuluRegenRate();
 }
 
 
 float AWKPlayerState::GetArmor() const
 {
-	return AttributeSetBase->GetArmor();
+	return HealthSet->GetArmor();
 }
 
 float AWKPlayerState::GetMoveSpeed() const
 {
-	return AttributeSetBase->GetMoveSpeed();
+	return HealthSet->GetMoveSpeed();
 }
 
 int32 AWKPlayerState::GetCharacterLevel() const
 {
-	return AttributeSetBase->GetCharacterLevel();
+	return HealthSet->GetCharacterLevel();
 }
 
 int32 AWKPlayerState::GetXP() const
 {
-	return AttributeSetBase->GetXP();
+	return HealthSet->GetXP();
 }
 
 int32 AWKPlayerState::GetXPBounty() const
 {
-	return AttributeSetBase->GetXPBounty();
+	return HealthSet->GetXPBounty();
 }
 
 int32 AWKPlayerState::GetGold() const
 {
-	return AttributeSetBase->GetGold();
+	return HealthSet->GetGold();
 }
 
 int32 AWKPlayerState::GetGoldBounty() const
 {
-	return AttributeSetBase->GetGoldBounty();
+	return HealthSet->GetGoldBounty();
 }
 
 void AWKPlayerState::HealthChanged(const FOnAttributeChangeData& Data)
@@ -193,13 +239,13 @@ void AWKPlayerState::HealthChanged(const FOnAttributeChangeData& Data)
 	// Handled in the UI itself using the AsyncTaskAttributeChanged node as an example how to do it in Blueprint
 
 	// If the player died, handle death
-	if (!IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))
-	{
-		if (WKPlayerCharacter)
-		{
-			WKPlayerCharacter->Die();
-		}
-	}
+	// if (!IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))
+	// {
+	// 	if (WKPlayerCharacter)
+	// 	{
+	// 		WKPlayerCharacter->Die();
+	// 	}
+	// }
 }
 
 void AWKPlayerState::MaxHealthChanged(const FOnAttributeChangeData& Data)
@@ -447,4 +493,8 @@ void AWKPlayerState::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCou
 
 		AbilitySystemComponent->CancelAbilities(&AbilityTagsToCancel, &AbilityTagsToIgnore);
 	}
+}
+
+void AWKPlayerState::OnRep_PawnData()
+{
 }
