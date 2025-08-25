@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagAssetInterface.h"
 #include "WKCharacterAnimInfoInterface.h"
 #include "GameFramework/Character.h"
 #include "WKCharacterBase.generated.h"
@@ -16,13 +17,14 @@ class UWKAbilitySystemComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AWKCharacterBase*, Character);
 
 UCLASS()
-class BLACKWK_API AWKCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWKCharacterAnimInfoInterface
+class BLACKWK_API AWKCharacterBase : public ACharacter, public IAbilitySystemInterface, public IWKCharacterAnimInfoInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
 public:
 	AWKCharacterBase(const class FObjectInitializer& ObjectInitializer);
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 
@@ -30,51 +32,22 @@ public:
 	virtual FWKEssentialValue GetEssentialValues() override;
 	/// ~IWKCharacterAnimInfoInterface
 
+	/// IGameplayTagAssetInterface
+	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
+	virtual bool HasMatchingGameplayTag(FGameplayTag TagToCheck) const override;
+	virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
+	virtual bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
+	/// ~IGameplayTagAssetInterface
+	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UWKAbilitySystemComponent* GetWKAbilitySystemComponent() const;
 
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetHealth() const;
+	UFUNCTION(BlueprintCallable)
+	void ClearMeleeComboIndex();
 
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetMaxHealth() const;
+	UFUNCTION(BlueprintCallable)
+	void SetMeleeComboIndex(int32 Index);
 
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetMana() const;
-
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetMaxMana() const;
-
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetStamina() const;
-
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetMaxStamina() const;
-
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetHulu() const;
-
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetMaxHulu() const;
-	
-	// Gets the Current value of MoveSpeed
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetMoveSpeed() const;
-
-	// Gets the Base value of MoveSpeed
-	UFUNCTION(BlueprintCallable, Category = "WKCharacter|Attributes")
-	float GetMoveSpeedBaseValue() const;
-
-public:
-	UPROPERTY(BlueprintAssignable)
-	FCharacterDiedDelegate OnCharacterDiedDelegate;
-
-protected:
-	virtual void SetHealth(float Health);
-	virtual void SetMana(float Mana);
-	virtual void SetStamina(float Stamina);
-	virtual void SetHulu(float Hulu);
-	
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WKCharacter")
 	FText CharacterName;
@@ -91,8 +64,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WKCharacter|Abilities")
 	TArray<TSubclassOf<UGameplayEffect>> StartupEffects;
 
-	TWeakObjectPtr<UWKAbilitySystemComponent> AbilitySystemComponent;
-	TWeakObjectPtr<UWKAttributeSetBase> AttributeSetBase;
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UWKAbilitySystemComponent> AbilitySystemComponent;
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", Replicated)
+	int32 CurrentMeleeComboIndex = 0;
 
 protected:
 	virtual void OnBeginPlay();

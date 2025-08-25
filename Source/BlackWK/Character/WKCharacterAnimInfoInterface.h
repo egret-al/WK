@@ -21,5 +21,7 @@ class BLACKWK_API IWKCharacterAnimInfoInterface
 
 public:
 	virtual FWKEssentialValue GetEssentialValues() { return FWKEssentialValue(); }
-	virtual FWKCharacterState GetCharacterState() { return FWKCharacterState(); } 
+	virtual FWKCharacterState GetCharacterState() { return FWKCharacterState(); }
+
+	USkeletalMeshComponent* GetWeaponMeshComponent() { return nullptr; }
 };

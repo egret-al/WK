@@ -7,10 +7,14 @@
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WKSkeletalMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer.SetDefaultSubobjectClass<UWKCharacterMovementComponent>(CharacterMovementComponentName))
+	: Super(ObjectInitializer
+		.SetDefaultSubobjectClass<UWKCharacterMovementComponent>(CharacterMovementComponentName)
+		.SetDefaultSubobjectClass<UWKSkeletalMeshComponent>(ACharacter::MeshComponentName))
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bAlwaysRelevant = true;
@@ -23,6 +27,14 @@ void AWKCharacterBase::BeginPlay()
 	Super::BeginPlay();
 
 	OnBeginPlay();
+}
+
+void AWKCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams SimulatedOnlyPushModelBased{ COND_SimulatedOnly, REPNOTIFY_Always, true };
+	DOREPLIFETIME_WITH_PARAMS_FAST(AWKCharacterBase, CurrentMeleeComboIndex, SimulatedOnlyPushModelBased);
 }
 
 void AWKCharacterBase::Tick(float DeltaSeconds)
@@ -51,6 +63,42 @@ FWKEssentialValue AWKCharacterBase::GetEssentialValues()
 	return EssentialValue;
 }
 
+void AWKCharacterBase::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
+{
+	TagContainer.Reset();
+	if (GetWKAbilitySystemComponent())
+	{
+		GetWKAbilitySystemComponent()->GetOwnedGameplayTags(TagContainer);
+	}
+}
+
+bool AWKCharacterBase::HasMatchingGameplayTag(FGameplayTag TagToCheck) const
+{
+	if (GetWKAbilitySystemComponent())
+	{
+		return GetWKAbilitySystemComponent()->HasMatchingGameplayTagExactly(TagToCheck);
+	}
+	return false;
+}
+
+bool AWKCharacterBase::HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const
+{
+	if (GetWKAbilitySystemComponent())
+	{
+		return GetWKAbilitySystemComponent()->HasAnyMatchingGameplayTags(TagContainer);
+	}
+	return false;
+}
+
+bool AWKCharacterBase::HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const
+{
+	if (GetWKAbilitySystemComponent())
+	{
+		return GetWKAbilitySystemComponent()->HasAllMatchingGameplayTags(TagContainer);
+	}
+	return false;
+}
+
 UAbilitySystemComponent* AWKCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent.Get();
@@ -61,136 +109,16 @@ UWKAbilitySystemComponent* AWKCharacterBase::GetWKAbilitySystemComponent() const
 	return Cast<UWKAbilitySystemComponent>(GetAbilitySystemComponent());
 }
 
-float AWKCharacterBase::GetHealth() const
+void AWKCharacterBase::ClearMeleeComboIndex()
 {
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetHealth();
-	}
-
-	return 0.0f;
+	CurrentMeleeComboIndex = 0;
+	MARK_PROPERTY_DIRTY_FROM_NAME(AWKCharacterBase, CurrentMeleeComboIndex, this);
 }
 
-float AWKCharacterBase::GetMaxHealth() const
+void AWKCharacterBase::SetMeleeComboIndex(int32 Index)
 {
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetMaxHealth();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetMana() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetMana();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetMaxMana() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetMaxMana();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetStamina() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetStamina();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetMaxStamina() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetMaxStamina();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetHulu() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetHulu();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetMaxHulu() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetMaxHulu();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetMoveSpeed() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetMoveSpeed();
-	}
-
-	return 0.0f;
-}
-
-float AWKCharacterBase::GetMoveSpeedBaseValue() const
-{
-	if (AttributeSetBase.IsValid())
-	{
-		return AttributeSetBase->GetMoveSpeedAttribute().GetGameplayAttributeData(AttributeSetBase.Get())->GetBaseValue();
-	}
-
-	return 0.0f;
-}
-
-void AWKCharacterBase::SetHealth(float Health)
-{
-	if (AttributeSetBase.IsValid())
-	{
-		AttributeSetBase->SetHealth(Health);
-	}
-}
-
-void AWKCharacterBase::SetMana(float Mana)
-{
-	if (AttributeSetBase.IsValid())
-	{
-		AttributeSetBase->SetMana(Mana);
-	}
-}
-
-void AWKCharacterBase::SetStamina(float Stamina)
-{
-	if (AttributeSetBase.IsValid())
-	{
-		AttributeSetBase->SetStamina(Stamina);
-	}
-}
-
-void AWKCharacterBase::SetHulu(float Hulu)
-{
-	if (AttributeSetBase.IsValid())
-	{
-		AttributeSetBase->SetHulu(Hulu);
-	}
+	CurrentMeleeComboIndex = Index;
+	MARK_PROPERTY_DIRTY_FROM_NAME(AWKCharacterBase, CurrentMeleeComboIndex, this);
 }
 
 void AWKCharacterBase::OnBeginPlay()

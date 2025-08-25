@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "WKPlayerCharacterBase.h"
+#include "BlackWK/AbilitySystem/WKAbilitySourceInterface.h"
 #include "WuKongPlayerCharacter.generated.h"
 
 UCLASS()
-class BLACKWK_API AWuKongPlayerCharacter : public AWKPlayerCharacterBase
+class BLACKWK_API AWuKongPlayerCharacter : public AWKPlayerCharacterBase, public IWKAbilitySourceInterface
 {
 	GENERATED_BODY()
 

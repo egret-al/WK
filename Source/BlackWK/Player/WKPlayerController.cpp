@@ -44,22 +44,6 @@ void AWKPlayerController::CreateHUD()
 	UIHUDWidget->SetCurrentHealth(PS->GetHealth());
 	UIHUDWidget->SetMaxHealth(PS->GetMaxHealth());
 	UIHUDWidget->SetHealthPercentage(PS->GetHealth() / FMath::Max<float>(PS->GetMaxHealth(), 1.f));
-	UIHUDWidget->SetCurrentMana(PS->GetMana());
-	UIHUDWidget->SetMaxMana(PS->GetMaxMana());
-	UIHUDWidget->SetManaPercentage(PS->GetMana() / FMath::Max<float>(PS->GetMaxMana(), 1.f));
-	UIHUDWidget->SetHealthRegenRate(PS->GetHealthRegenRate());
-	UIHUDWidget->SetManaRegenRate(PS->GetManaRegenRate());
-	UIHUDWidget->SetCurrentStamina(PS->GetStamina());
-	UIHUDWidget->SetMaxStamina(PS->GetMaxStamina());
-	UIHUDWidget->SetStaminaPercentage(PS->GetStamina() / FMath::Max<float>(PS->GetMaxStamina(), 1.f));
-	UIHUDWidget->SetStaminaRegenRate(PS->GetStaminaRegenRate());
-	UIHUDWidget->SetCurrentHulu(PS->GetHulu());
-	UIHUDWidget->SetMaxHulu(PS->GetMaxHulu());
-	UIHUDWidget->SetHuluPercentage(PS->GetHulu() / FMath::Max<float>(PS->GetMaxHulu(), 1.f));
-	UIHUDWidget->SetHuluRegenRate(PS->GetHuluRegenRate());
-	UIHUDWidget->SetExperience(PS->GetXP());
-	UIHUDWidget->SetGold(PS->GetGold());
-	UIHUDWidget->SetHeroLevel(PS->GetCharacterLevel());
 }
 
 UWKWidgetHUD* AWKPlayerController::GetHUD()

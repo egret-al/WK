@@ -62,6 +62,11 @@ void UWKAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 	}
 }
 
+bool UWKAbilitySystemComponent::HasMatchingGameplayTagExactly(FGameplayTag TagToCheck) const
+{
+	return GameplayTagCountContainer.GetExplicitGameplayTags().HasTagExact(TagToCheck);
+}
+
 void UWKAbilitySystemComponent::ProcessAbilityInput()
 {
 	if (HasMatchingGameplayTag(WKGameplayTags::InputTag_Gameplay_AbilityInputBlocked))
@@ -219,4 +224,18 @@ void UWKAbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec& S
 			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, AbilityInstance->GetCurrentActivationInfo().GetActivationPredictionKey());
 		}
 	}
+}
+
+void UWKAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
+{
+	Super::AbilityLocalInputPressed(InputID);
+
+	OnAbilityInputPressedDelegate.Broadcast(InputID);
+}
+
+void UWKAbilitySystemComponent::AbilityLocalInputReleased(int32 InputID)
+{
+	OnAbilityInputReleaseDelegate.Broadcast(InputID);
+	
+	Super::AbilityLocalInputReleased(InputID);
 }

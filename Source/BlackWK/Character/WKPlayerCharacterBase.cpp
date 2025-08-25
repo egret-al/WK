@@ -155,10 +155,6 @@ void AWKPlayerCharacterBase::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent = Cast<UWKAbilitySystemComponent>(PS->GetAbilitySystemComponent());
 		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
-		SetHealth(GetMaxHealth());
-		SetMana(GetMaxMana());
-		SetStamina(GetMaxStamina());
-		SetHulu(GetMaxHulu());
 
 		AWKPlayerController* PC = Cast<AWKPlayerController>(GetController());
 		if (PC)
@@ -198,7 +194,7 @@ UWKFloatingStatusBarWidget* AWKPlayerCharacterBase::GetFloatingStatusBar()
 void AWKPlayerCharacterBase::InitializeFloatingStatusBar()
 {
 	// Only create once
-	if (UIFloatingStatusBar || !AbilitySystemComponent.IsValid())
+	if (UIFloatingStatusBar || !AbilitySystemComponent.Get())
 	{
 		return;
 	}
@@ -213,10 +209,6 @@ void AWKPlayerCharacterBase::InitializeFloatingStatusBar()
 			if (UIFloatingStatusBar && UIFloatingStatusBarComponent)
 			{
 				UIFloatingStatusBarComponent->SetWidget(UIFloatingStatusBar);
-	
-				// Setup the floating status bar
-				UIFloatingStatusBar->SetHealthPercentage(GetHealth() / GetMaxHealth());
-				UIFloatingStatusBar->SetManaPercentage(GetMana() / GetMaxMana());
 			}
 		}
 	}

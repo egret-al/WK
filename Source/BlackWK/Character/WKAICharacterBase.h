@@ -30,29 +30,12 @@ public:
 	/// ~IWKLockableInterface
 	
 protected:
-	// Attribute changed callbacks
-	virtual void HealthChanged(const FOnAttributeChangeData& Data);
-
-	// Tag change callbacks
-	// virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
-
-protected:
-	// Actual hard pointer to AbilitySystemComponent
-	UPROPERTY()
-	TObjectPtr<UWKAbilitySystemComponent> HardRefAbilitySystemComponent;
-
-	// Actual hard pointer to AttributeSetBase
-	UPROPERTY()
-	TObjectPtr<UWKAttributeSetBase> HardRefAttributeSetBase;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GASDocumentation|UI")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "WK|UI")
 	TSubclassOf<UWKFloatingStatusBarWidget> UIFloatingStatusBarClass;
 
 	UPROPERTY()
 	TObjectPtr<UWKFloatingStatusBarWidget> UIFloatingStatusBar;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "GASDocumentation|UI")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "WK|UI")
 	TObjectPtr<UWidgetComponent> UIFloatingStatusBarComponent;
-
-	FDelegateHandle HealthChangedDelegateHandle;
 };
