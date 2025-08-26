@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "WKGameplayStatics.generated.h"
 
+class UWKAbilitySystemComponent;
 /**
  * 
  */
@@ -16,4 +17,7 @@ class BLACKWK_API UWKGameplayStatics : public UGameplayStatics
 
 public:
 	static bool WorldIsGame(const UObject* WorldContextObj);
+
+	UFUNCTION(BlueprintPure)
+	static UWKAbilitySystemComponent* GetWKAbilitySystemComponent(AActor* InActor);
 };

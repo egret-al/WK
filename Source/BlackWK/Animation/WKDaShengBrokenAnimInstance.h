@@ -20,6 +20,9 @@ protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
+	UFUNCTION(BlueprintCallable)
+	void OnEnterStandIdle();
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "References")
 	TWeakObjectPtr<AWKAIDaShengCharacter> OwnerDaSheng;
@@ -29,4 +32,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
 	TWeakObjectPtr<AWKCharacterBase> CurrentTarget;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bHasStandIdle = false;
 };

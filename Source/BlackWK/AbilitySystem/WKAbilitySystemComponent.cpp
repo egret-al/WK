@@ -6,6 +6,7 @@
 #include "WKGameplayTags.h"
 #include "Abilities/WKGameplayAbility.h"
 #include "BlackWK/Animation/WKAnimInstanceBase.h"
+#include "DataAssets/WKGameplayAbilityDataAsset.h"
 
 UWKAbilitySystemComponent::UWKAbilitySystemComponent()
 {
@@ -60,6 +61,11 @@ void UWKAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 			WKAnimInstance->InitializeWithAbilitySystem(this);
 		}
 	}
+}
+
+void UWKAbilitySystemComponent::ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags)
+{
+	Super::ApplyAbilityBlockAndCancelTags(AbilityTags, RequestingAbility, bEnableBlockTags, BlockTags, bExecuteCancelTags, CancelTags);
 }
 
 bool UWKAbilitySystemComponent::HasMatchingGameplayTagExactly(FGameplayTag TagToCheck) const
@@ -151,16 +157,25 @@ void UWKAbilitySystemComponent::ClearAbilityInput()
 
 void UWKAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
+	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
+	AbilitiesToActivate.Reset();
+
 	if (InputTag.IsValid())
 	{
 		for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 		{
 			if (AbilitySpec.Ability && AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
 			{
-				InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
-				InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
+				AbilitiesToActivate.AddUnique(AbilitySpec.Handle);
+				// InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
+				// InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
 			}
 		}
+	}
+
+	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
+	{
+		TryActivateAbility(AbilitySpecHandle);
 	}
 }
 
@@ -184,6 +199,123 @@ FSimpleMulticastDelegate& UWKAbilitySystemComponent::WKAbilityReplicatedEventDel
 	FGameplayAbilitySpecHandleAndPredictionKey PredictionKey(AbilityHandle, AbilityOriginalPredictionKey);
 	TSharedRef<FAbilityReplicatedDataCache> ReplicatedDataCache = AbilityTargetDataMap.FindOrAdd(PredictionKey);
 	return ReplicatedDataCache->GenericEvents[EventType].Delegate;
+}
+
+void UWKAbilitySystemComponent::UpdateCurrentPriorityAbility(UWKGameplayAbility* RequestAbility, const FWKGameplayAbilityPriorityInfo& PriorityInfo)
+{
+	if (!RequestAbility)
+	{
+		return;
+	}
+
+	if (GetCurrentPriorityAbility() != RequestAbility)
+	{
+		return;
+	}
+
+	ApplyPriorityBlockAndCancel(RequestAbility, PriorityInfo, false);
+}
+
+UWKGameplayAbility* UWKAbilitySystemComponent::GetCurrentPriorityAbility() const
+{
+	return CurrentPriorityAbility;
+}
+
+FWKGameplayAbilityPriorityInfo UWKAbilitySystemComponent::GetCurrentPriorityInfo() const
+{
+	return CurrentPriorityInfo;
+}
+
+void UWKAbilitySystemComponent::ApplyPriorityBlockAndCancel(UWKGameplayAbility* RequestAbility, const FWKGameplayAbilityPriorityInfo& PriorityInfo, bool bEndAbility)
+{
+	if (!RequestAbility)
+	{
+		return;
+	}
+	
+	// 如果GA配置了只用于检测能否激活，则不纳入系统管理
+	if (!RequestAbility->HasPriority() || RequestAbility->CheckPriorityActivateOnly())
+	{
+		if(CurrentPriorityAbility && RequestAbility != CurrentPriorityAbility && !bEndAbility && Cast<UWKGameplayAbility>(RequestAbility)->AbilityDataAsset->PriorityInfo.bCancelLastActiveAbility == true)
+		{
+			CurrentPriorityAbility->AbilityInterruptedByPriority(RequestAbility);
+			CancelAbilitySpec(*CurrentPriorityAbility->GetCurrentAbilitySpec(), RequestAbility);
+		}
+		return;
+	}
+
+	// 如果是EndAbility，直接清空优先级数据到初始状态
+	if (bEndAbility)
+	{
+		// 保护，确保结束的GA与当前GA一致，不然就是有问题系统存在混乱
+		if (CurrentPriorityAbility == RequestAbility)
+		{
+			CurrentPriorityInfo = FWKGameplayAbilityPriorityInfo();
+			LastPriorityAbility = CurrentPriorityAbility;
+			if (GetWorld())
+			{
+				LastPriorityAbilityTime = GetWorld()->GetTimeSeconds();
+			}
+			CurrentPriorityAbility = nullptr;
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red,
+				FString::Printf(TEXT("Priority GA ERROR (%s): 当前技能与取消技能不吻合.. 系统当前：%s --- 尝试取消：%s"),
+					IsOwnerActorAuthoritative() ? TEXT("Server") : TEXT("Client"),
+					CurrentPriorityAbility == nullptr ? TEXT("nullptr") : *CurrentPriorityAbility->GetName(),
+					*RequestAbility->GetName())
+			);
+		}
+	}
+	else
+	{
+		// 之前有PriorityGA被激活，先Cancel
+		if (CurrentPriorityAbility != nullptr)
+		{
+			if (GetWorld())
+			{
+				LastPriorityAbilityTime = GetWorld()->GetTimeSeconds();
+			}
+			// 如果等于自己，则为动态修改优先级，不需要取消
+			if (CurrentPriorityAbility != RequestAbility && Cast<UWKGameplayAbility>(RequestAbility)->HasPriority())
+			{
+				if (CurrentPriorityAbility->CheckPriorityActivateInterrupt(RequestAbility->AbilityDataAsset))
+				{
+					if (RequestAbility->bServerCheckCanActive)
+					{
+						//DSLog(DSLogGAS, Log, TEXT("-- JLSS %s -- Cancel call !! ----- Request:%s ----- Target: %s"), IsOwnerActorAuthoritative() ? TEXT("Server") : TEXT("Client"), *RequestAbility->GetName(), *CurrentPriorityAbility->GetName());
+						float RequestPriority = Cast<UWKGameplayAbility>(RequestAbility)->AbilityDataAsset->PriorityInfo.Priority;
+						//ensureAlways(CurrentPriorityInfo.Priority < RequestPriority, TEXT("旧的优先级更高的情况绝对不该走到这。。。。。"));
+
+						if (CurrentPriorityInfo.Priority >= RequestPriority)
+						{
+							// DSLog(DSLogGAS, Warning, TEXT("服务器优先执行的GA打断了Client本地刚执行的GA"));
+						}
+					}
+					// DSLog(DSLogGAS, Verbose, TEXT("%s: PriorityCancel: CurrentPriorityAbility: %s, RequestAbility: %s "), IsOwnerActorAuthoritative() ? TEXT("Server") : TEXT("Client"), *CurrentPriorityAbility->GetName(), *RequestAbility->GetName());
+					LastPriorityAbility = CurrentPriorityAbility;
+					// if(CVarShowPriorityInterrupt.GetValueOnAnyThread() > 0)
+					// {
+					// 	DSLog(DSLogGAS, Log, TEXT("GA :%s interrupt GA :%s"),*RequestAbility->GetName(), *CurrentPriorityAbility->GetName());
+					// }
+					// ShowInterruptedUI(RequestAbility, CurrentPriorityAbility);
+					CurrentPriorityAbility->AbilityInterruptedByPriority(RequestAbility);
+					CancelAbilitySpec(*CurrentPriorityAbility->GetCurrentAbilitySpec(), RequestAbility);
+				}
+			}
+		}
+
+		// 优先级修改广播
+		if (OnAbilityPriorityUpdateDelegate.IsBound())
+		{
+			OnAbilityPriorityUpdateDelegate.Broadcast(CurrentPriorityInfo.Priority, PriorityInfo.Priority);
+		}
+
+		// 最后更新数据
+		CurrentPriorityInfo = PriorityInfo;
+		CurrentPriorityAbility = RequestAbility;
+	}
 }
 
 void UWKAbilitySystemComponent::TryActivateAbilitiesOnSpawn()

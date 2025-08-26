@@ -3,6 +3,9 @@
 
 #include "WKGameplayStatics.h"
 
+#include "AbilitySystemInterface.h"
+#include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
+
 bool UWKGameplayStatics::WorldIsGame(const UObject* WorldContextObj)
 {
 	if (WorldContextObj && WorldContextObj->GetWorld())
@@ -15,4 +18,19 @@ bool UWKGameplayStatics::WorldIsGame(const UObject* WorldContextObj)
 	}
 
 	return false;
+}
+
+UWKAbilitySystemComponent* UWKGameplayStatics::GetWKAbilitySystemComponent(AActor* InActor)
+{
+	if (!InActor)
+	{
+		return nullptr;
+	}
+
+	if (IAbilitySystemInterface* AbilityInterface = Cast<IAbilitySystemInterface>(InActor))
+	{
+		return Cast<UWKAbilitySystemComponent>(AbilityInterface->GetAbilitySystemComponent());
+	}
+	
+	return nullptr;
 }

@@ -109,9 +109,13 @@ UWKAbilitySystemComponent* AWKCharacterBase::GetWKAbilitySystemComponent() const
 	return Cast<UWKAbilitySystemComponent>(GetAbilitySystemComponent());
 }
 
+void AWKCharacterBase::PlayHitMontage_Implementation(AWKCharacterBase* InInstigator)
+{
+}
+
 void AWKCharacterBase::ClearMeleeComboIndex()
 {
-	CurrentMeleeComboIndex = 0;
+	CurrentMeleeComboIndex = INDEX_NONE;
 	MARK_PROPERTY_DIRTY_FROM_NAME(AWKCharacterBase, CurrentMeleeComboIndex, this);
 }
 

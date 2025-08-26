@@ -50,7 +50,14 @@ void UWKEnhancedInputComponent::BindAbilityActions(const UWKInputConfig* InputCo
 		{
 			if (PressedFunc)
 			{
-				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, PressedFunc, Action.InputTag).GetHandle());
+				if (Action.bIsTrigger)
+				{
+					BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, PressedFunc, Action.InputTag).GetHandle());
+				}
+				else
+				{
+					BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Started, Object, PressedFunc, Action.InputTag).GetHandle());
+				}
 			}
 
 			if (ReleasedFunc)

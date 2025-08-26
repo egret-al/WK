@@ -42,6 +42,9 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UWKAbilitySystemComponent* GetWKAbilitySystemComponent() const;
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void PlayHitMontage(AWKCharacterBase* InInstigator);
+
 	UFUNCTION(BlueprintCallable)
 	void ClearMeleeComboIndex();
 
@@ -69,7 +72,7 @@ protected:
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", Replicated)
-	int32 CurrentMeleeComboIndex = 0;
+	int32 CurrentMeleeComboIndex = INDEX_NONE;
 
 protected:
 	virtual void OnBeginPlay();

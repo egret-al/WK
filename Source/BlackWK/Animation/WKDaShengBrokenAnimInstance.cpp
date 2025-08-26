@@ -24,3 +24,8 @@ void UWKDaShengBrokenAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bHasSawTarget = PawnStateInterface->HasSawEnemyTarget();
 	}
 }
+
+void UWKDaShengBrokenAnimInstance::OnEnterStandIdle()
+{
+	bHasStandIdle = true;
+}
