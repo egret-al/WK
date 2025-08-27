@@ -82,4 +82,8 @@ public:
 	// 技能标识
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Priority")
 	FGameplayTag AbilityTag;
+
+	// 技能已经激活时，是否尝试重新激活（调用TryActiveAbility)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Ability")
+	bool TryReactive;
 };

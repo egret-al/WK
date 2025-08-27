@@ -6,6 +6,7 @@
 #include "WKGameplayTags.h"
 #include "Abilities/WKGameplayAbility.h"
 #include "BlackWK/Animation/WKAnimInstanceBase.h"
+#include "BlackWK/Character/WKCharacterBase.h"
 #include "DataAssets/WKGameplayAbilityDataAsset.h"
 
 UWKAbilitySystemComponent::UWKAbilitySystemComponent()
@@ -358,11 +359,111 @@ void UWKAbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec& S
 	}
 }
 
+void UWKAbilitySystemComponent::AbilityListenWithInput(int32 InputID, FGameplayAbilitySpecHandle AbilityHandle, EAbilityGenericReplicatedEvent::Type ListenType)
+{
+	TArray<FAbilityInputListenerHandle>& AbilityInputListenerHandles = InputListeners.FindOrAdd(InputID);
+	for (auto& ListenerHandle : AbilityInputListenerHandles)
+	{
+		if (ListenerHandle.AbilityHandle == AbilityHandle)
+		{
+			ListenerHandle.bListen[ListenType] = true;
+			return;
+		}
+	}
+	FAbilityInputListenerHandle ListenerHandle = FAbilityInputListenerHandle(AbilityHandle);
+	ListenerHandle.bListen[ListenType] = true;
+	AbilityInputListenerHandles.Add(ListenerHandle);
+}
+
+void UWKAbilitySystemComponent::AbilityCancelListenWithInput(int32 InputID, FGameplayAbilitySpecHandle AbilityHandle, EAbilityGenericReplicatedEvent::Type ListenType)
+{
+	TArray<FAbilityInputListenerHandle>& AbilityInputListenerHandles = InputListeners.FindOrAdd(InputID);
+	for (auto& ListenerHandle : AbilityInputListenerHandles)
+	{
+		if (ListenerHandle.AbilityHandle == AbilityHandle)
+		{
+			ListenerHandle.bListen[ListenType] = false;
+			//AbilityInputListenerHandles->Remove(ListenerHandle);
+			return;
+		}
+	}
+}
+
 void UWKAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 {
 	Super::AbilityLocalInputPressed(InputID);
 
 	OnAbilityInputPressedDelegate.Broadcast(InputID);
+
+	// Consume the input if this InputID is overloaded with GenericConfirm/Cancel and the GenericConfim/Cancel callback is bound
+	if (IsGenericConfirmInputBound(InputID))
+	{
+		LocalInputConfirm();
+		return;
+	}
+
+	if (IsGenericCancelInputBound(InputID))
+	{
+		LocalInputCancel();
+		return;
+	}
+	
+	for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		if (Spec.InputID != InputID)
+		{
+			continue;
+		}
+
+		// 检测是否已经激活
+		if (Spec.IsActive())
+		{
+			// RPC Batching
+			if (UWKGameplayAbility* WKAbility = Cast<UWKGameplayAbility>(Spec.Ability))
+			{
+				if (Spec.Ability->bReplicateInputDirectly && IsOwnerActorAuthoritative() == false)
+				{
+					ServerSetInputPressed(Spec.Handle);
+				}
+
+				AbilitySpecInputPressed(Spec);
+				// Invoke the InputPressed event. This is not replicated here. If someone is listening, they may replicate the InputPressed event to the server.
+				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, Spec.GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey());
+
+				if (WKAbility)
+				{
+					if (WKAbility->AbilityDataAsset && WKAbility->AbilityDataAsset->TryReactive)
+					{
+						TryActivateAbility(Spec.Handle);
+					}
+				}
+			}
+		}
+		else
+		{
+			// Ability is not active, so try to activate it
+			TryActivateAbility(Spec.Handle);
+		}
+	}
+
+	// 检测是否有其他ability关注了该事件，使用GameCustom1自主监听Pressed事件
+	TArray<FAbilityInputListenerHandle>* ListenerHandles = InputListeners.Find(InputID);
+	
+	if (ListenerHandles&&!ListenerHandles->IsEmpty())
+	{
+		TArray<FAbilityInputListenerHandle> ListenerHandlesCopy = *ListenerHandles;
+		for (FAbilityInputListenerHandle&  Handle : ListenerHandlesCopy)
+		{
+			for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+			{
+				if (Spec.Handle == Handle.AbilityHandle)
+				{
+					FPredictionKey CurrentPredictionKey = FPredictionKey();
+					InvokeReplicatedEventWithPayload(EAbilityGenericReplicatedEvent::GameCustom5, Spec.Handle, Spec.GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey(), CurrentPredictionKey, FVector(InputID, 0, 0));
+				}
+			}
+		}
+	}
 }
 
 void UWKAbilitySystemComponent::AbilityLocalInputReleased(int32 InputID)
@@ -370,4 +471,23 @@ void UWKAbilitySystemComponent::AbilityLocalInputReleased(int32 InputID)
 	OnAbilityInputReleaseDelegate.Broadcast(InputID);
 	
 	Super::AbilityLocalInputReleased(InputID);
+
+	ABILITYLIST_SCOPE_LOCK();
+	//检测是否有其他ability关注了该事件使用GameCustom2自主监听Released事件
+	TArray<FAbilityInputListenerHandle>* ListenerHandles = InputListeners.Find(InputID);
+	if (ListenerHandles && !ListenerHandles->IsEmpty())
+	{
+		TArray<FAbilityInputListenerHandle> ListenerHandlesCopy = *ListenerHandles;
+		for (FAbilityInputListenerHandle& Handle : ListenerHandlesCopy)
+		{
+			for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+			{
+				if (Spec.Handle == Handle.AbilityHandle)
+				{
+					FPredictionKey CurrentPredictionKey = FPredictionKey();
+					InvokeReplicatedEventWithPayload(EAbilityGenericReplicatedEvent::GameCustom6, Spec.Handle, Spec.GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey(),CurrentPredictionKey, FVector(InputID, 0, 0));
+				}
+			}
+		}
+	}
 }

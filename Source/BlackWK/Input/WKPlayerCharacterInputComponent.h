@@ -41,12 +41,17 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void InitializePlayerInput(UInputComponent* PlayerInputComponent);
 
+	const UEnum* GetInputEnumPtr() const {return EnumPtr; }
+
+	UPROPERTY(Transient)
+	TObjectPtr<const UEnum> EnumPtr;
+
 protected:
 	void Input_Move(const FInputActionValue& InputActionValue);
 	void Input_LookMouse(const FInputActionValue& InputActionValue);
 
-	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
-	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
+	void Input_AbilityInputTagPressed(FName InputName, bool bCheckLongPress);
+	void Input_AbilityInputTagReleased(FName InputName);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "WKConfig|Input")

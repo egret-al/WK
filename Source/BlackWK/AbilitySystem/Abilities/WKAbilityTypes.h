@@ -32,3 +32,9 @@ enum class EWKAbilityInputID : uint8
 	// 9 Jump
 	Jump			UMETA(DisplayName = "Jump")
 };
+
+UENUM(BlueprintType)
+enum class EWKGameplayAbilityInputBinds : uint8
+{
+	MeleeCombo		UMETA(DisplayName = "MeleeCombo")
+};

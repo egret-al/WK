@@ -22,18 +22,18 @@ public:
 	void RemoveBinds(TArray<uint32>& BindHandles);
 
 	template<class UserClass, typename FuncType>
-	void BindNativeAction(const UWKInputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound);
+	void BindNativeAction(const UWKInputConfig* InputConfig, const FName InputName, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound);
 
 	template<class UserClass, typename PressedFuncType, typename ReleasedFuncType>
 	void BindAbilityActions(const UWKInputConfig* InputConfig, UserClass* Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc, TArray<uint32>& BindHandles);
 };
 
 template <class UserClass, typename FuncType>
-void UWKEnhancedInputComponent::BindNativeAction(const UWKInputConfig* InputConfig, const FGameplayTag& InputTag, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound)
+void UWKEnhancedInputComponent::BindNativeAction(const UWKInputConfig* InputConfig, const FName InputName, ETriggerEvent TriggerEvent, UserClass* Object, FuncType Func, bool bLogIfNotFound)
 {
 	check(InputConfig);
 
-	if (const UInputAction* IA = InputConfig->FindNativeInputActionForTag(InputTag, bLogIfNotFound))
+	if (const UInputAction* IA = InputConfig->FindNativeInputActionForName(InputName, bLogIfNotFound))
 	{
 		BindAction(IA, TriggerEvent, Object, Func);
 	}
@@ -46,23 +46,23 @@ void UWKEnhancedInputComponent::BindAbilityActions(const UWKInputConfig* InputCo
 
 	for (const FWKInputAction& Action : InputConfig->AbilityInputActions)
 	{
-		if (Action.InputAction && Action.InputTag.IsValid())
+		if (Action.InputAction && Action.InputName.IsValid())
 		{
 			if (PressedFunc)
 			{
 				if (Action.bIsTrigger)
 				{
-					BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, PressedFunc, Action.InputTag).GetHandle());
+					BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, PressedFunc, Action.InputName, Action.bCheckLongPress).GetHandle());
 				}
 				else
 				{
-					BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Started, Object, PressedFunc, Action.InputTag).GetHandle());
+					BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Started, Object, PressedFunc, Action.InputName, Action.bCheckLongPress).GetHandle());
 				}
 			}
 
 			if (ReleasedFunc)
 			{
-				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, Action.InputTag).GetHandle());
+				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, Action.InputName).GetHandle());
 			}
 		}
 	}

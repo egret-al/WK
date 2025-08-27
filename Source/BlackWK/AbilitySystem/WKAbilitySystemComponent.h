@@ -13,6 +13,19 @@ class UWKGameplayAbility;
 DECLARE_MULTICAST_DELEGATE_OneParam(FWKAbilityInputDelegate, int32)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWKGameplayAbilityPriorityDelegate, float, OldPriority, float, NewPriority);
 
+struct FAbilityInputListenerHandle
+{
+public:
+	FGameplayAbilitySpecHandle AbilityHandle;
+	TArray<bool> bListen;
+
+	FAbilityInputListenerHandle(FGameplayAbilitySpecHandle Handle)
+	{
+		AbilityHandle = Handle;
+		bListen.SetNumZeroed(EAbilityGenericReplicatedEvent::MAX);
+	}
+};
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BLACKWK_API UWKAbilitySystemComponent : public UAbilitySystemComponent
 {
@@ -28,6 +41,14 @@ public:
 	
 	void ProcessAbilityInput();
 	void ClearAbilityInput();
+
+	/** Ability自定义监听输入事件 */
+	void AbilityListenWithInput(int32 InputID, FGameplayAbilitySpecHandle AbilityHandle, EAbilityGenericReplicatedEvent::Type ListenType);
+	/** Ability自定义取消监听输入事件 */
+	void AbilityCancelListenWithInput(int32 InputID, FGameplayAbilitySpecHandle AbilityHandle, EAbilityGenericReplicatedEvent::Type ListenType);
+	
+	virtual void AbilityLocalInputPressed(int32 InputID) override;
+	virtual void AbilityLocalInputReleased(int32 InputID) override;
 
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
@@ -58,9 +79,6 @@ protected:
 	virtual void AbilitySpecInputPressed(FGameplayAbilitySpec& Spec) override;
 	virtual void AbilitySpecInputReleased(FGameplayAbilitySpec& Spec) override;
 
-	virtual void AbilityLocalInputPressed(int32 InputID) override;
-	virtual void AbilityLocalInputReleased(int32 InputID) override;
-
 public:
 	FWKAbilityInputDelegate OnAbilityInputPressedDelegate;
 	FWKAbilityInputDelegate OnAbilityInputReleaseDelegate;
@@ -90,4 +108,6 @@ private:
 	// 优先级打断相关信息
 	UPROPERTY()
 	FWKGameplayAbilityPriorityInfo CurrentPriorityInfo;
+
+	TMap<int32, TArray<FAbilityInputListenerHandle>> InputListeners;
 };

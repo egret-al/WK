@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayEffect.h"
 #include "GameplayTagContainer.h"
+#include "Abilities/WKAbilityTypes.h"
 #include "Engine/DataAsset.h"
 #include "WKAbilitySet.generated.h"
 
@@ -24,7 +25,7 @@ public:
 	int32 AbilityLevel = 1;
 
 	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag InputTag;
+	EWKGameplayAbilityInputBinds InputID;
 };
 
 USTRUCT(BlueprintType)

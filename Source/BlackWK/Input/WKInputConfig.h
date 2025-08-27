@@ -22,10 +22,13 @@ public:
 	TObjectPtr<const UInputAction> InputAction = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FGameplayTag InputTag;
+	FName InputName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	bool bIsTrigger = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool bCheckLongPress = false;
 };
 
 /**
@@ -40,10 +43,10 @@ public:
 	UWKInputConfig(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION(BlueprintCallable)
-	const UInputAction* FindNativeInputActionForTag(const FGameplayTag& InputTag, bool bLogNotFound = true) const;
+	const UInputAction* FindNativeInputActionForName(const FName InputName, bool bLogNotFound = true) const;
 
 	UFUNCTION(BlueprintCallable)
-	const UInputAction* FindAbilityInputActionForTag(const FGameplayTag& InputTag, bool bLogNotFound = true) const;
+	const UInputAction* FindAbilityInputActionForName(const FName InputName, bool bLogNotFound = true) const;
 
 public:
 	/** IA和Tag的映射，必须手动绑定 */

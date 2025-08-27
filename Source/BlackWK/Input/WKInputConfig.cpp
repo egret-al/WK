@@ -9,11 +9,11 @@ UWKInputConfig::UWKInputConfig(const FObjectInitializer& ObjectInitializer)
 	
 }
 
-const UInputAction* UWKInputConfig::FindNativeInputActionForTag(const FGameplayTag& InputTag, bool bLogNotFound) const
+const UInputAction* UWKInputConfig::FindNativeInputActionForName(const FName InputName, bool bLogNotFound) const
 {
 	for (const FWKInputAction& Action : NativeInputActions)
 	{
-		if (Action.InputAction && (Action.InputTag == InputTag))
+		if (Action.InputAction && Action.InputName == InputName)
 		{
 			return Action.InputAction;
 		}
@@ -22,11 +22,11 @@ const UInputAction* UWKInputConfig::FindNativeInputActionForTag(const FGameplayT
 	return nullptr;
 }
 
-const UInputAction* UWKInputConfig::FindAbilityInputActionForTag(const FGameplayTag& InputTag, bool bLogNotFound) const
+const UInputAction* UWKInputConfig::FindAbilityInputActionForName(const FName InputName, bool bLogNotFound) const
 {
 	for (const FWKInputAction& Action : AbilityInputActions)
 	{
-		if (Action.InputAction && (Action.InputTag == InputTag))
+		if (Action.InputAction && Action.InputName == InputName)
 		{
 			return Action.InputAction;
 		}

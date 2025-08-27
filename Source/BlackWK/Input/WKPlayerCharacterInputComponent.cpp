@@ -9,6 +9,7 @@
 #include "WKEnhancedInputComponent.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AbilitySystem/WKGameplayTags.h"
+#include "BlackWK/AbilitySystem/Abilities/WKAbilityTypes.h"
 #include "BlackWK/Character/WKCharacterAnimInfoInterface.h"
 #include "BlackWK/Character/WKCharacterBase.h"
 #include "BlackWK/Character/WKPawnData.h"
@@ -20,6 +21,7 @@ UWKPlayerCharacterInputComponent::UWKPlayerCharacterInputComponent(const FObject
 	: Super(ObjectInitializer)
 {
 	bReadyToBindInputs = false;
+	EnumPtr = StaticEnum<EWKGameplayAbilityInputBinds>();
 }
 
 UWKPlayerCharacterInputComponent* UWKPlayerCharacterInputComponent::FindPlayerCharacterInputComponent(const AActor* InActor)
@@ -94,8 +96,8 @@ void UWKPlayerCharacterInputComponent::InitializePlayerInput(UInputComponent* Pl
 
 		TArray<uint32> BindHandles;
 		EnhancedInputComponent->BindAbilityActions(PawnData->InputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, BindHandles);
-		EnhancedInputComponent->BindNativeAction(PawnData->InputConfig, WKGameplayTags::InputTag_Move, ETriggerEvent::Triggered, this, &ThisClass::Input_Move, false);
-		EnhancedInputComponent->BindNativeAction(PawnData->InputConfig, WKGameplayTags::InputTag_Look_Mouse, ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse, false);
+		EnhancedInputComponent->BindNativeAction(PawnData->InputConfig, TEXT("Move"), ETriggerEvent::Triggered, this, &ThisClass::Input_Move, false);
+		EnhancedInputComponent->BindNativeAction(PawnData->InputConfig, TEXT("Look_Mouse"), ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse, false);
 	}
 
 	if (ensure(!bReadyToBindInputs))
@@ -153,24 +155,28 @@ void UWKPlayerCharacterInputComponent::Input_LookMouse(const FInputActionValue& 
 	}
 }
 
-void UWKPlayerCharacterInputComponent::Input_AbilityInputTagPressed(FGameplayTag InputTag)
+void UWKPlayerCharacterInputComponent::Input_AbilityInputTagPressed(FName InputName, bool bCheckLongPress)
 {
-	if (const AWKCharacterBase* CharacterBase = Cast<AWKCharacterBase>(GetOwner()))
+	const AWKCharacterBase* CharacterBase = Cast<AWKCharacterBase>(GetOwner());
+	if (IsValid(CharacterBase))
 	{
 		if (UWKAbilitySystemComponent* ASC = CharacterBase->GetWKAbilitySystemComponent())
 		{
-			ASC->AbilityInputTagPressed(InputTag);
+			const int32 InputID = GetInputEnumPtr()->GetIndexByName(InputName);
+			ASC->AbilityLocalInputPressed(InputID);
 		}
 	}
 }
 
-void UWKPlayerCharacterInputComponent::Input_AbilityInputTagReleased(FGameplayTag InputTag)
+void UWKPlayerCharacterInputComponent::Input_AbilityInputTagReleased(FName InputName)
 {
-	if (const AWKCharacterBase* CharacterBase = Cast<AWKCharacterBase>(GetOwner()))
+	const AWKCharacterBase* CharacterBase = Cast<AWKCharacterBase>(GetOwner());
+	if (IsValid(CharacterBase))
 	{
 		if (UWKAbilitySystemComponent* ASC = CharacterBase->GetWKAbilitySystemComponent())
 		{
-			ASC->AbilityInputTagReleased(InputTag);
+			const int32 InputID = GetInputEnumPtr()->GetIndexByName(InputName);
+			ASC->AbilityLocalInputReleased(InputID);
 		}
 	}
 }
