@@ -20,4 +20,6 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	static UWKAbilitySystemComponent* GetWKAbilitySystemComponent(AActor* InActor);
+
+	static float CalculateDirection(const FVector& Direction, const FVector& FacingDirection);
 };

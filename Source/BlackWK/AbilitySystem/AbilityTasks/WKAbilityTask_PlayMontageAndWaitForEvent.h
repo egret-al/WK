@@ -3,13 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WKAbilityTask_NetSync.h"
 #include "Abilities/Tasks/AbilityTask.h"
 #include "WKAbilityTask_PlayMontageAndWaitForEvent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWKPlayMontageAndWaitForEventDelegate, FGameplayTag, EventTag, FGameplayEventData, EventData);
 
 UCLASS()
-class BLACKWK_API UWKAbilityTask_PlayMontageAndWaitForEvent : public UAbilityTask
+class BLACKWK_API UWKAbilityTask_PlayMontageAndWaitForEvent : public UWKAbilityTask_NetSync
 {
 	GENERATED_BODY()
 

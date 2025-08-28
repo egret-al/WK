@@ -24,7 +24,9 @@ public class BlackWK : ModuleRules
 			"GameplayMessageRuntime",
 			
 			"AIModule",
-			"NetCore"
+			"NetCore",
+			
+			"MotionWarping"
 		});
 	}
 }

@@ -74,88 +74,6 @@ bool UWKAbilitySystemComponent::HasMatchingGameplayTagExactly(FGameplayTag TagTo
 	return GameplayTagCountContainer.GetExplicitGameplayTags().HasTagExact(TagToCheck);
 }
 
-void UWKAbilitySystemComponent::ProcessAbilityInput()
-{
-	if (HasMatchingGameplayTag(WKGameplayTags::InputTag_Gameplay_AbilityInputBlocked))
-	{
-		ClearAbilityInput();
-		return;
-	}
-
-	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
-	AbilitiesToActivate.Reset();
-
-	// 处理所有输入持续激活的GA
-	for (const FGameplayAbilitySpecHandle& SpecHandle : InputHeldSpecHandles)
-	{
-		if (const FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-		{
-			const UWKGameplayAbility* AbilityCDO = Cast<UWKGameplayAbility>(AbilitySpec->Ability);
-			if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EWKAbilityActivationPolicy::WhileInputActive)
-			{
-				AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
-			}
-		}
-	}
-
-	// 处理所有在按下这一帧的GA
-	for (const FGameplayAbilitySpecHandle& SpecHandle : InputPressedSpecHandles)
-	{
-		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-		{
-			if (AbilitySpec->Ability)
-			{
-				AbilitySpec->InputPressed = true;
-
-				if (AbilitySpec->IsActive())
-				{
-					AbilitySpecInputPressed(*AbilitySpec);
-				}
-				else
-				{
-					const UWKGameplayAbility* AbilityCDO = Cast<UWKGameplayAbility>(AbilitySpec->Ability);
-					if (AbilityCDO && AbilityCDO->GetActivationPolicy() == EWKAbilityActivationPolicy::OnInputTriggered)
-					{
-						AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
-					}
-				}
-			}
-		}
-	}
-
-	for (const FGameplayAbilitySpecHandle& AbilitySpecHandle : AbilitiesToActivate)
-	{
-		TryActivateAbility(AbilitySpecHandle);
-	}
-
-	// 处理所有松开按键时触发的GA
-	for (const FGameplayAbilitySpecHandle& SpecHandle : InputReleasedSpecHandles)
-	{
-		if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromHandle(SpecHandle))
-		{
-			if (AbilitySpec->Ability)
-			{
-				AbilitySpec->InputPressed = false;
-
-				if (AbilitySpec->IsActive())
-				{
-					AbilitySpecInputReleased(*AbilitySpec);
-				}
-			}
-		}
-	}
-
-	InputPressedSpecHandles.Reset();
-	InputReleasedSpecHandles.Reset();
-}
-
-void UWKAbilitySystemComponent::ClearAbilityInput()
-{
-	InputPressedSpecHandles.Reset();
-	InputReleasedSpecHandles.Reset();
-	InputHeldSpecHandles.Reset();
-}
-
 void UWKAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
 	static TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
@@ -316,6 +234,177 @@ void UWKAbilitySystemComponent::ApplyPriorityBlockAndCancel(UWKGameplayAbility* 
 		// 最后更新数据
 		CurrentPriorityInfo = PriorityInfo;
 		CurrentPriorityAbility = RequestAbility;
+	}
+}
+
+void UWKAbilitySystemComponent::ClientSetReplicatedTargetDataEx_Implementation(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, const FGameplayAbilityTargetDataHandle& TargetDataHandle, FPredictionKey CurrentPredictionKey)
+{
+	// 使用 Server 接口相同实现
+	ServerSetReplicatedTargetDataEx_Implementation(AbilityHandle, Guid, TargetDataHandle, CurrentPredictionKey);
+}
+
+bool UWKAbilitySystemComponent::ClientSetReplicatedTargetDataEx_Validate(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, const FGameplayAbilityTargetDataHandle& TargetDataHandle, FPredictionKey CurrentPredictionKey)
+{
+	return ServerSetReplicatedTargetDataEx_Validate(AbilityHandle, Guid, TargetDataHandle, CurrentPredictionKey);
+}
+
+void UWKAbilitySystemComponent::ServerSetReplicatedTargetDataEx_Implementation(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, const FGameplayAbilityTargetDataHandle& TargetDataHandle, FPredictionKey CurrentPredictionKey)
+{
+	// 解决数据错乱问题. 父类方法中 AbilityTargetDataMap 的 Key 是重复的.
+	//    原问题：同个GA中多处触发此方法，会导致 Find 到相同数据，并覆盖 TargetData。
+	//		会在使用处进行非法数据转换。造成通知异常(可能内存强转错误)。
+
+	// DSLog(DSLogGAS, Verbose, TEXT("ASC: %s ServerSetReplicatedTargetDataEx Handle:%s Guid:%s"), GetOwner()?*GetOwner()->GetName():TEXT("nullptr"), *AbilityHandle.ToString(), *Guid.ToString());
+
+	// 异常数据提示
+	{
+		FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(AbilityHandle);
+		if (Spec && Spec->Ability && !Spec->IsActive())
+		{
+			// 通常发生在Client的GA激活并发送了RPC，但Server技能激活失败。
+			//		此时收到数据将会缓存在内存中，下一次的GA设置数据侦听会立即应用旧数据并回调。可能造成应用到逻辑的数据不正确。
+			//		则：应使用'return'忽略本条数据
+			// 也会发生在 Client GA已结束，但此处依然收到 Server 网络消息
+			// DSLog(DSLogGAS, Warning, TEXT("Ability %s. 收到消息'Set ReplicatedTargetData' 但当前GA并未激活."), *Spec->Ability->GetName());
+			return;
+		}
+	}
+
+	FScopedPredictionWindow ScopedPrediction(this, CurrentPredictionKey);
+
+	// 查找或添加，获取引用
+	FWKAbilityReplicatedDataCache& ReplicatedData = AbilityTargetDataMapEx.FindOrAdd(FGameplayAbilityGuidKey(AbilityHandle, Guid));
+
+	// 异常数据提示
+	if (ReplicatedData.TargetData.Num() > 0)
+	{
+		FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(AbilityHandle);
+		if (Spec && Spec->Ability)
+		{
+			// DSLog(DSLogGAS, Error, TEXT("Ability %s. 覆盖了待处理的 replicated target data. "), *Spec->Ability->GetName());
+		}
+	}
+
+	// 赋值并广播
+	ReplicatedData.TargetData = TargetDataHandle;
+	ReplicatedData.bTargetConfirmed = true;
+	ReplicatedData.bTargetCancelled = false;
+	ReplicatedData.PredictionKey = CurrentPredictionKey;
+
+	// 创建一个副本。广播过程中的后续逻辑会修改'AbilityTargetDataMapEx'。造成'TargetSetDelegate'内存回收。
+	FAbilityTargetDataSetDelegate DelegateCopy = ReplicatedData.TargetSetDelegate;
+	DelegateCopy.Broadcast(TargetDataHandle, ReplicatedData.ApplicationTag);
+}
+
+bool UWKAbilitySystemComponent::ServerSetReplicatedTargetDataEx_Validate(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, const FGameplayAbilityTargetDataHandle& TargetDataHandle, FPredictionKey CurrentPredictionKey)
+{
+	if (!Guid.IsValid())
+	{
+		FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(AbilityHandle);
+		if (Spec && Spec->Ability)
+		{
+			// DSLog(DSLogGAS, Log, TEXT("Ability %s. ServerSetReplicatedTargetDataEx_Validate Invalid Guid."), *Spec->Ability->GetName());
+		}
+	}
+	// check the data coming from the client to ensure it's valid
+	for (const TSharedPtr<FGameplayAbilityTargetData>& TgtData : TargetDataHandle.Data)
+	{
+		if (!ensure(TgtData.IsValid()))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+FDelegateHandle UWKAbilitySystemComponent::SetReplicatedTargetDataDelegateEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, FAbilityTargetDataSetDelegate::FDelegate&& InDelegate)
+{
+	// DSLog(DSLogGAS, Verbose, TEXT("ASC: %s SetReplicatedTargetDataDelegateEx Handle:%s Guid:%s"), GetOwner()?*GetOwner()->GetName():TEXT("nullptr"), *AbilityHandle.ToString(), *Guid.ToString());
+	FWKAbilityReplicatedDataCache& ReplicatedData = AbilityTargetDataMapEx.FindOrAdd(FGameplayAbilityGuidKey(AbilityHandle, Guid));
+
+	ReplicatedData.DelegateCount++;
+	// 如果数据已设置，则打印Error日志。逻辑上不应存在相同GUID同时多次触发
+	if (ReplicatedData.DelegateCount > 1)
+	{
+		FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(AbilityHandle);
+		// DSLog(DSLogGAS, Error, TEXT("Ability %s. ReplicatedData 被多次设置回调(当前第 %d 次). 只应存在1次。"), (Spec && Spec->Ability) ? *Spec->Ability->GetName() : TEXT("Unknown"), ReplicatedData.DelegateCount);
+	}
+
+	return ReplicatedData.TargetSetDelegate.Add(InDelegate);
+}
+
+void UWKAbilitySystemComponent::RemoveReplicatedTargetDataDelegateEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, FDelegateHandle DelegateHandle)
+{
+	if (const auto& CachedData = AbilityTargetDataMapEx.Find(FGameplayAbilityGuidKey(AbilityHandle, Guid)))
+	{
+		// DSLog(DSLogGAS, Verbose, TEXT("ASC: %s RemoveReplicatedTargetDataDelegateEx Handle:%s Guid:%s"), GetOwner()?*GetOwner()->GetName():TEXT("nullptr"), *AbilityHandle.ToString(), *Guid.ToString());
+		CachedData->TargetSetDelegate.Remove(DelegateHandle);
+
+		CachedData->DelegateCount--;
+	}
+}
+
+bool UWKAbilitySystemComponent::CallReplicatedTargetDataDelegatesIfSetEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid)
+{
+	bool CalledDelegate = false;
+	if (const FWKAbilityReplicatedDataCache* CachedData = AbilityTargetDataMapEx.Find(FGameplayAbilityGuidKey(AbilityHandle, Guid)))
+	{
+		// Use prediction key that was sent to us
+		FScopedPredictionWindow ScopedWindow(this, CachedData->PredictionKey, false);
+
+		if (CachedData->bTargetConfirmed)
+		{
+			// DSLog(DSLogGAS, Verbose, TEXT("ASC: %s CallReplicatedTargetDataDelegatesIfSetEx Handle:%s Guid:%s"), GetOwner()?*GetOwner()->GetName():TEXT("nullptr"), *AbilityHandle.ToString(), *Guid.ToString());
+
+			if (CachedData->DelegateCount > 1)
+			{
+				FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(AbilityHandle);
+				// DSLog(DSLogGAS, Error, TEXT("Ability %s. ReplicatedData 存在多个回调(%d). 只应存在1次。"), (Spec && Spec->Ability) ? *Spec->Ability->GetName() : TEXT("Unknown"), CachedData->DelegateCount);
+			}
+
+			// 创建一个副本。广播过程中的后续逻辑会修改'AbilityTargetDataMapEx'。
+			const FGameplayAbilityTargetDataHandle TargetDataCopy = CachedData->TargetData;
+			const FAbilityTargetDataSetDelegate DelegateCopy = CachedData->TargetSetDelegate;
+			DelegateCopy.Broadcast(TargetDataCopy, CachedData->ApplicationTag);
+			CalledDelegate = true;
+		}
+		else if (CachedData->bTargetCancelled)
+		{
+			CachedData->TargetCancelledDelegate.Broadcast();
+			CalledDelegate = true;
+		}
+	}
+
+	return CalledDelegate;
+}
+
+void UWKAbilitySystemComponent::ClearAbilityReplicatedDataCacheEx(FGameplayAbilitySpecHandle Handle, const FGuid& Guid)
+{
+	// DSLog(DSLogGAS, Verbose, TEXT("ASC: %s ClearAbilityReplicatedDataCacheEx: Handle:%s GUID:%s"), GetOwner()?*GetOwner()->GetName():TEXT("nullptr"), *Handle.ToString(), *Guid.ToString());
+#if !UE_BUILD_SHIPPING
+	// 额外清理一次数据。预防外部逻辑错误使用旧的Found的指针。
+	if (const auto CachedData = AbilityTargetDataMapEx.Find(FGameplayAbilityGuidKey(Handle, Guid)))
+	{
+		CachedData->TargetData.Clear();
+	}
+#endif
+	AbilityTargetDataMapEx.Remove(FGameplayAbilityGuidKey(Handle, Guid));
+}
+
+void UWKAbilitySystemComponent::ClearAbilityReplicatedDataCacheEx(FGameplayAbilitySpecHandle Handle)
+{
+	if (AbilityTargetDataMapEx.Num() == 0)
+	{
+		return;
+	}
+	// DSLog(DSLogGAS, Verbose, TEXT("ASC: %s ClearAbilityReplicatedDataCacheEx MapSize:%d Handle:%s"), GetOwner()?*GetOwner()->GetName():TEXT("nullptr"), AbilityTargetDataMapEx.Num(), *Handle.ToString());
+	for (auto It = AbilityTargetDataMapEx.CreateIterator(); It; ++It)
+	{
+		if (It.Key().AbilityHandle == Handle)
+		{
+			It.Value().TargetData.Clear();
+			It.RemoveCurrent();  // 安全删除当前元素
+		}
 	}
 }
 

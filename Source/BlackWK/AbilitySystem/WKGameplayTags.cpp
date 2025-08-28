@@ -10,6 +10,7 @@ namespace WKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InputTag_Look_Mouse, "InputTag.Look.Mouse", "控制视角移动");
 	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_State_Invincible, "Gameplay.State.Invincible", "无敌状态");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_State_IronBody, "Gameplay.State.IronBody", "霸体状态");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_Damage_Hit, "Gameplay.Message.Damage.Hit", "命中敌人时发送的事件");
 
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString)

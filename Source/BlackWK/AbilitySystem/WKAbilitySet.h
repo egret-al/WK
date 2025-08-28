@@ -23,9 +23,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	int32 AbilityLevel = 1;
-
-	UPROPERTY(EditDefaultsOnly)
-	EWKGameplayAbilityInputBinds InputID;
 };
 
 USTRUCT(BlueprintType)

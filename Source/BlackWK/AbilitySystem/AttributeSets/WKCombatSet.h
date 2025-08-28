@@ -20,19 +20,25 @@ public:
 
 	ATTRIBUTE_ACCESSORS(UWKCombatSet, BaseDamage);
 	ATTRIBUTE_ACCESSORS(UWKCombatSet, BaseHeal);
+	ATTRIBUTE_ACCESSORS(UWKCombatSet, ImpactAmount);
 
 protected:
-
 	UFUNCTION()
 	void OnRep_BaseDamage(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	void OnRep_BaseHeal(const FGameplayAttributeData& OldValue);
+	
+	UFUNCTION()
+	void OnRep_ImpactAmount(const FGameplayAttributeData& OldValue);
 
-private:
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseDamage, Category = "CombatSet|Combat", Meta = (AllowPrivateAccess = true))
+public:
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseDamage, Category = "CombatSet|Combat")
 	FGameplayAttributeData BaseDamage;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseHeal, Category = "CombatSet|Combat", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseHeal, Category = "CombatSet|Combat")
 	FGameplayAttributeData BaseHeal;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ImpactAmount, Category = "CombatSet|Combat")
+	FGameplayAttributeData ImpactAmount;
 };

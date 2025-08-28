@@ -90,10 +90,10 @@ void UWKAbilitySet::GiveToAbilitySystem(UWKAbilitySystemComponent* ASC, FWKAbili
 		{
 			continue;
 		}
-
-		int32 InputID = static_cast<int32>(AbilityToGrant.InputID);
 		
 		UWKGameplayAbility* WKAbilityCDO = AbilityToGrant.Ability->GetDefaultObject<UWKGameplayAbility>();
+		int32 InputID = static_cast<int32>(WKAbilityCDO->DefaultInputBind);
+		
 		FGameplayAbilitySpec AbilitySpec(WKAbilityCDO, AbilityToGrant.AbilityLevel, InputID);
 		AbilitySpec.SourceObject = SourceObject;
 

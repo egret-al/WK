@@ -11,6 +11,7 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Look_Mouse);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Invincible);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_IronBody);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_Hit);
 	
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString = false);

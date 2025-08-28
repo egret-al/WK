@@ -101,13 +101,13 @@ void AWKPlayerController::OnRep_PlayerState()
 
 void AWKPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
 {
-	if (AWKCharacterBase* CharacterBase = Cast<AWKCharacterBase>(GetPawn()))
-	{
-		if (UWKAbilitySystemComponent* ASC = CharacterBase->GetWKAbilitySystemComponent())
-		{
-			ASC->ProcessAbilityInput();
-		}
-	}
+	// if (AWKCharacterBase* CharacterBase = Cast<AWKCharacterBase>(GetPawn()))
+	// {
+	// 	if (UWKAbilitySystemComponent* ASC = CharacterBase->GetWKAbilitySystemComponent())
+	// 	{
+	// 		ASC->ProcessAbilityInput();
+	// 	}
+	// }
 	
 	Super::PostProcessInput(DeltaTime, bGamePaused);
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "Abilities/WKAbilityTypes.h"
 #include "DataAssets/WKGameplayAbilityDataAsset.h"
 #include "WKAbilitySystemComponent.generated.h"
 
@@ -39,9 +40,6 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "WKAbilitySystemComponent")
 	bool HasMatchingGameplayTagExactly(FGameplayTag TagToCheck) const;
 	
-	void ProcessAbilityInput();
-	void ClearAbilityInput();
-
 	/** Ability自定义监听输入事件 */
 	void AbilityListenWithInput(int32 InputID, FGameplayAbilitySpecHandle AbilityHandle, EAbilityGenericReplicatedEvent::Type ListenType);
 	/** Ability自定义取消监听输入事件 */
@@ -72,6 +70,25 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetCurrentPriorityAbilityTime() const { return CurrentPriorityAbilityTime; }
 
+	/** Replicates targeting data to the client */
+	UFUNCTION(Client, reliable, WithValidation)
+	void ClientSetReplicatedTargetDataEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, const FGameplayAbilityTargetDataHandle& TargetDataHandle, FPredictionKey CurrentPredictionKey);
+
+	/** 复制 targeting data to the server */
+	UFUNCTION(Server, reliable, WithValidation)
+	void ServerSetReplicatedTargetDataEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, const FGameplayAbilityTargetDataHandle& TargetDataHandle, FPredictionKey CurrentPredictionKey);
+
+	// 根据技能和节点GUID，设置TargetData被设置的Delegate
+	FDelegateHandle SetReplicatedTargetDataDelegateEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, FAbilityTargetDataSetDelegate::FDelegate&& InDelegate);
+	void RemoveReplicatedTargetDataDelegateEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid, FDelegateHandle DelegateHandle);
+
+	// 如果数据已被设置，则触发Delegate
+	bool CallReplicatedTargetDataDelegatesIfSetEx(FGameplayAbilitySpecHandle AbilityHandle, const FGuid& Guid);
+
+	// 根据技能和节点GUID，清除缓存的数据与回调
+	void ClearAbilityReplicatedDataCacheEx(FGameplayAbilitySpecHandle Handle, const FGuid& Guid);
+	void ClearAbilityReplicatedDataCacheEx(FGameplayAbilitySpecHandle Handle);
+
 protected:
 	/** 尝试在生成时就去激活可以激活的GA */
 	void TryActivateAbilitiesOnSpawn();
@@ -91,6 +108,8 @@ protected:
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
 	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
 
+	TMap<FGameplayAbilityGuidKey, FWKAbilityReplicatedDataCache> AbilityTargetDataMapEx;
+	
 private:
 	UPROPERTY()
 	float LastPriorityAbilityTime;

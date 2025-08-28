@@ -8,6 +8,7 @@
 UWKCombatSet::UWKCombatSet()
 	: BaseDamage(0.0f)
 	, BaseHeal(0.0f)
+	, ImpactAmount(0.f)
 {
 }
 
@@ -17,6 +18,7 @@ void UWKCombatSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, BaseDamage, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, BaseHeal, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, ImpactAmount, COND_OwnerOnly, REPNOTIFY_Always);
 }
 
 void UWKCombatSet::OnRep_BaseDamage(const FGameplayAttributeData& OldValue)
@@ -27,4 +29,9 @@ void UWKCombatSet::OnRep_BaseDamage(const FGameplayAttributeData& OldValue)
 void UWKCombatSet::OnRep_BaseHeal(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UWKCombatSet, BaseHeal, OldValue);
+}
+
+void UWKCombatSet::OnRep_ImpactAmount(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UWKCombatSet, ImpactAmount, OldValue);
 }

@@ -105,6 +105,10 @@ public:
 	// 是否严格以客户端优先级为准
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKGameplayAbility")
 	bool bClientPriorityFirst = false;
+
+	// 默认绑定的按键类型
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKGameplayAbility")
+	EWKGameplayAbilityInputBinds DefaultInputBind;
 	
 protected:
 	/// UGameplayAbility
