@@ -31,12 +31,6 @@ void AWKGameMode::HeroDied(AController* Controller)
 	FTimerHandle RespawnTimerHandle;
 	FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::RespawnHero, Controller);
 	GetWorldTimerManager().SetTimer(RespawnTimerHandle, RespawnDelegate, RespawnDelay, false);
-
-	AWKPlayerController* PC = Cast<AWKPlayerController>(Controller);
-	if (PC)
-	{
-		PC->SetRespawnCountdown(RespawnDelay);
-	}
 }
 
 void AWKGameMode::BeginPlay()

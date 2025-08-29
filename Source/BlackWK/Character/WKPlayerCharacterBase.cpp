@@ -163,6 +163,8 @@ void AWKPlayerCharacterBase::PossessedBy(AController* NewController)
 		}
 
 		InitializeFloatingStatusBar();
+
+		OnAbilitySystemInitialized();
 	}
 }
 

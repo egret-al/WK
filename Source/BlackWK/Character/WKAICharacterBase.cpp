@@ -54,6 +54,8 @@ void AWKAICharacterBase::BeginPlay()
 			}
 		}
 	}
+
+	OnAbilitySystemInitialized();
 }
 
 bool AWKAICharacterBase::HasSawEnemyTarget()

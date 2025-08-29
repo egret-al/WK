@@ -5,6 +5,7 @@
 
 #include "AbilitySystemInterface.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
+#include "BlackWK/Player/WKPlayerController.h"
 
 bool UWKGameplayStatics::WorldIsGame(const UObject* WorldContextObj)
 {
@@ -35,22 +36,35 @@ UWKAbilitySystemComponent* UWKGameplayStatics::GetWKAbilitySystemComponent(AActo
 	return nullptr;
 }
 
-float UWKGameplayStatics::CalculateDirection(const FVector& Direction, const FVector& FacingDirection)
+APlayerController* UWKGameplayStatics::GetLocalPlayerController(const UObject* WorldContextObject)
 {
-	// 只在水平面上计算，忽略Z
-	FVector Dir2D = FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal();
-	FVector Facing2D = FVector(FacingDirection.X, FacingDirection.Y, 0.f).GetSafeNormal();
-
-	if (Dir2D.IsNearlyZero() || Facing2D.IsNearlyZero())
+	if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
 	{
-		return 0.f;
+		for (FConstPlayerControllerIterator Iterator = World->GetPlayerControllerIterator(); Iterator; ++Iterator)
+		{
+			APlayerController* PlayerController = Iterator->Get();
+			if (PlayerController && PlayerController->GetLocalPlayer() && PlayerController->GetLocalPlayer()->IsA<ULocalPlayer>())
+			{
+				return PlayerController;
+			}
+		}
 	}
+	return nullptr;
+}
 
-	// atan2( cross, dot ) 得到 [-PI, PI]，再转角度
-	float AngleRad = FMath::Atan2(
-		FVector::CrossProduct(Facing2D, Dir2D).Z,   // 左右性
-		FVector::DotProduct(Facing2D, Dir2D)        // 大小
-	);
+TArray<AWKPlayerController*> UWKGameplayStatics::GetAllPlayerController(const UObject* WorldContextObject)
+{
+	TArray<AWKPlayerController*> Out;
 
-	return FMath::RadiansToDegrees(AngleRad); // 输出 [-180, 180]
+	if (WorldContextObject->GetWorld())
+	{
+		for (FConstPlayerControllerIterator Iterator = WorldContextObject->GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+		{
+			if (AWKPlayerController* PC = Cast<AWKPlayerController>(Iterator->Get()))
+			{
+				Out.Add(PC);
+			}
+		}
+	}
+	return Out;
 }

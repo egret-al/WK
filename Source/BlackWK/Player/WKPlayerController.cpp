@@ -39,45 +39,11 @@ void AWKPlayerController::CreateHUD()
 
 	UIHUDWidget = CreateWidget<UWKWidgetHUD>(this, UIHUDWidgetClass);
 	UIHUDWidget->AddToViewport();
-	
-	// Set attributes
-	UIHUDWidget->SetCurrentHealth(PS->GetHealth());
-	UIHUDWidget->SetMaxHealth(PS->GetMaxHealth());
-	UIHUDWidget->SetHealthPercentage(PS->GetHealth() / FMath::Max<float>(PS->GetMaxHealth(), 1.f));
 }
 
 UWKWidgetHUD* AWKPlayerController::GetHUD()
 {
 	return UIHUDWidget;
-}
-
-void AWKPlayerController::ShowDamageNumber_Implementation(float DamageAmount, AWKCharacterBase* TargetCharacter)
-{
-	if (TargetCharacter && DamageNumberClass)
-	{
-		UWKDamageTextWidgetComponent* DamageText = NewObject<UWKDamageTextWidgetComponent>(TargetCharacter, DamageNumberClass);
-		DamageText->RegisterComponent();
-		DamageText->AttachToComponent(TargetCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		DamageText->SetDamageText(DamageAmount);
-	}
-}
-
-bool AWKPlayerController::ShowDamageNumber_Validate(float DamageAmount, AWKCharacterBase* TargetCharacter)
-{
-	return true;
-}
-
-void AWKPlayerController::SetRespawnCountdown_Implementation(float RespawnTimeRemaining)
-{
-	if (UIHUDWidget)
-	{
-		UIHUDWidget->SetRespawnCountdown(RespawnTimeRemaining);
-	}
-}
-
-bool AWKPlayerController::SetRespawnCountdown_Validate(float RespawnTimeRemaining)
-{
-	return true;
 }
 
 void AWKPlayerController::OnPossess(APawn* InPawn)

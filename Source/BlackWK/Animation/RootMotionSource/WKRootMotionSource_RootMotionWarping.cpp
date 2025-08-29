@@ -6,6 +6,8 @@
 #include "MotionWarpingComponent.h"
 #include "BlackWK/Animation/AnimNotify/WKAnimNotifyState_RootMotionWarping.h"
 #include "BlackWK/Gameplay/WKGameplayStatics.h"
+#include "BlackWK/Utils/Utilities.h"
+#include "BlackWK/Utils/WKMath.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -527,7 +529,7 @@ bool FWKRootMotionSource_RootMotionWarping::HandleTargetActorWarping(const AChar
 				ActiveTargetSection->LastDirection = (TargetLocation - Character.GetActorLocation()).GetSafeNormal();
 				ActiveTargetSection->StartDeltaZ = TargetLocation.Z - ActiveTargetSection->StartLocation.GetValue().Z;
 
-				float StartAngle = UWKGameplayStatics::CalculateDirection((TargetLocation - Character.GetActorLocation()).GetSafeNormal2D(), Character.GetActorForwardVector().GetSafeNormal2D());
+				float StartAngle = FWKMath::CalculateDirection((TargetLocation - Character.GetActorLocation()).GetSafeNormal2D(), Character.GetActorForwardVector().GetSafeNormal2D());
 				//如果一开始角度就超过限制，不追踪
 				if (ActiveTargetSection->RotationToAbort >=0 &&FMath::Abs(StartAngle) > ActiveTargetSection->RotationToAbort)
 				{
@@ -557,7 +559,7 @@ bool FWKRootMotionSource_RootMotionWarping::HandleTargetActorWarping(const AChar
 				TargetLocation = ActiveTargetSection->LastTargetLocation;
 			}
 
-			float Angle = UWKGameplayStatics::CalculateDirection((TargetLocation - Character.GetActorLocation()).GetSafeNormal2D(), Character.GetActorForwardVector().GetSafeNormal2D());
+			float Angle = FWKMath::CalculateDirection((TargetLocation - Character.GetActorLocation()).GetSafeNormal2D(), Character.GetActorForwardVector().GetSafeNormal2D());
 			bool bUpdateTrackLocation = true;
 			
 			if (ActiveTargetSection->MaxDistance < 0
@@ -712,7 +714,7 @@ bool FWKRootMotionSource_RootMotionWarping::HandleTargetActorWarping(const AChar
 				if (!ActiveTargetSection->StopTrace)
 				{
 					DebugString += FString::Printf(TEXT("没有限制旋转速率"));
-					TargetDeltaAngle = UWKGameplayStatics::CalculateDirection(ToNewTargetDirection, Character.GetActorForwardVector().GetSafeNormal2D());
+					TargetDeltaAngle = FWKMath::CalculateDirection(ToNewTargetDirection, Character.GetActorForwardVector().GetSafeNormal2D());
 				}
 			}
 
@@ -731,8 +733,8 @@ bool FWKRootMotionSource_RootMotionWarping::HandleTargetActorWarping(const AChar
 			DeltaRotation.Yaw = TargetDeltaAngle/2;
 		}
 		else
-		{//如果没有找到目标,按照WarpingDistanceIfTargetNotFound进行缩放
-			
+		{
+			//如果没有找到目标,按照WarpingDistanceIfTargetNotFound进行缩放
 			if (ActiveTargetSection->WarpingDistanceIfTargetNotFound >= 0)
 			{
 				FVector ScaledTranslation = FVector(0, 0,  0);

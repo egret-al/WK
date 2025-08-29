@@ -124,7 +124,7 @@ void UWKHealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDat
 	}
 
 	// Check health again in case an event above changed it.
-	bOutOfHealth = (GetHealth() <= 0.0f);
+	bOutOfHealth = GetHealth() <= 0.0f;
 }
 
 void UWKHealthSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -157,7 +157,7 @@ void UWKHealthSet::PostAttributeChange(const FGameplayAttribute& Attribute, floa
 		}
 	}
 
-	if (bOutOfHealth && (GetHealth() > 0.0f))
+	if (bOutOfHealth && GetHealth() > 0.0f)
 	{
 		bOutOfHealth = false;
 	}

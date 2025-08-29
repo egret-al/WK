@@ -13,6 +13,7 @@ class UGameplayEffect;
 class UWKGameplayAbility;
 class UWKAttributeSetBase;
 class UWKAbilitySystemComponent;
+class UWKHealthComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AWKCharacterBase*, Character);
 
@@ -52,6 +53,9 @@ public:
 	void SetMeleeComboIndex(int32 Index);
 
 protected:
+	virtual void OnAbilitySystemInitialized();
+
+protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WKCharacter")
 	FText CharacterName;
 
@@ -69,6 +73,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UWKAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WKCharacter|Character")
+	TObjectPtr<UWKHealthComponent> HealthComponent;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", Replicated)

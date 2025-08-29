@@ -19,17 +19,6 @@ public:
 	void CreateHUD();
 	UWKWidgetHUD* GetHUD();
 
-	UFUNCTION(Client, Reliable, WithValidation)
-	void ShowDamageNumber(float DamageAmount, AWKCharacterBase* TargetCharacter);
-	void ShowDamageNumber_Implementation(float DamageAmount, AWKCharacterBase* TargetCharacter);
-	bool ShowDamageNumber_Validate(float DamageAmount, AWKCharacterBase* TargetCharacter);
-
-	// Simple way to RPC to the client the countdown until they respawn from the GameMode. Will be latency amount of out sync with the Server.
-	UFUNCTION(Client, Reliable, WithValidation)
-	void SetRespawnCountdown(float RespawnTimeRemaining);
-	void SetRespawnCountdown_Implementation(float RespawnTimeRemaining);
-	bool SetRespawnCountdown_Validate(float RespawnTimeRemaining);
-
 protected:
 	// Server only
 	virtual void OnPossess(APawn* InPawn) override;

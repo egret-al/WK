@@ -7,6 +7,7 @@
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WKHealthComponent.h"
 #include "Components/WKSkeletalMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
@@ -20,6 +21,8 @@ AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
 	bAlwaysRelevant = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
+
+	HealthComponent = CreateDefaultSubobject<UWKHealthComponent>(TEXT("HealthComponent"));
 }
 
 void AWKCharacterBase::BeginPlay()
@@ -123,6 +126,14 @@ void AWKCharacterBase::SetMeleeComboIndex(int32 Index)
 {
 	CurrentMeleeComboIndex = Index;
 	MARK_PROPERTY_DIRTY_FROM_NAME(AWKCharacterBase, CurrentMeleeComboIndex, this);
+}
+
+void AWKCharacterBase::OnAbilitySystemInitialized()
+{
+	UWKAbilitySystemComponent* ASC = GetWKAbilitySystemComponent();
+	check(ASC);
+
+	HealthComponent->InitializeWithAbilitySystem(ASC);
 }
 
 void AWKCharacterBase::OnBeginPlay()

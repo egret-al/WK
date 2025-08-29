@@ -7,16 +7,6 @@
 #include "UObject/Object.h"
 #include "WKAnimNotifyState_RootMotionWarping.generated.h"
 
-#define SERIALIZE_BY_CONDITION(Flag, SerializeOp, ResetOp) \
-if (RepBits & (1 << (Flag)))                          \
-{                                                     \
-	SerializeOp;                                      \
-}                                                     \
-else if (Ar.IsLoading())                              \
-{                                                     \
-	ResetOp;                                          \
-}
-
 UENUM(BlueprintType)
 enum class EWKRotateOrientation: uint8
 {

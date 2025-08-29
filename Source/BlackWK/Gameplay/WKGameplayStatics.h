@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "WKGameplayStatics.generated.h"
 
+class AWKPlayerController;
 class UWKAbilitySystemComponent;
 /**
  * 
@@ -21,5 +22,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	static UWKAbilitySystemComponent* GetWKAbilitySystemComponent(AActor* InActor);
 
-	static float CalculateDirection(const FVector& Direction, const FVector& FacingDirection);
+	/** 获取本地客户端的PlayerController */
+	UFUNCTION(BlueprintPure, Category = "WKGame", meta = (WorldContext = "WorldContextObject"))
+	static APlayerController* GetLocalPlayerController(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintPure, Category = "WKGame", meta = (WorldContext = "WorldContextObject"))
+	static TArray<AWKPlayerController*> GetAllPlayerController(const UObject* WorldContextObject);
 };
