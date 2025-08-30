@@ -46,8 +46,12 @@ public:
 	UPROPERTY(Transient)
 	TObjectPtr<const UEnum> EnumPtr;
 
+public:
+	FVector2D MoveInput;
+
 protected:
 	void Input_Move(const FInputActionValue& InputActionValue);
+	void Input_Move_Complete(const FInputActionValue& InputActionValue);
 	void Input_LookMouse(const FInputActionValue& InputActionValue);
 
 	void Input_AbilityInputTagPressed(FName InputName, bool bCheckLongPress);

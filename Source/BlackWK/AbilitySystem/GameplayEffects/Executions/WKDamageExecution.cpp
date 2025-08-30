@@ -4,6 +4,7 @@
 #include "WKDamageExecution.h"
 
 #include "BlackWK/AbilitySystem/WKGameplayEffectContext.h"
+#include "BlackWK/AbilitySystem/WKGameplayTags.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKCombatSet.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKHealthSet.h"
 
@@ -38,6 +39,14 @@ void UWKDamageExecution::Execute_Implementation(const FGameplayEffectCustomExecu
 	const FGameplayTagContainer* SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
 	const FGameplayTagContainer* TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
 
+	UAbilitySystemComponent* TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
+	if (TargetASC->HasMatchingGameplayTag(WKGameplayTags::Gameplay_State_Invincible))
+	{
+		// 无敌状态，不会受伤
+		return;
+	}
+
+	
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.SourceTags = SourceTags;
 	EvaluateParameters.TargetTags = TargetTags;

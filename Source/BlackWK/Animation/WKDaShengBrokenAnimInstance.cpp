@@ -3,6 +3,8 @@
 
 #include "WKDaShengBrokenAnimInstance.h"
 
+#include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
+#include "BlackWK/AbilitySystem/WKGameplayTags.h"
 #include "BlackWK/Character/WKAIDaShengCharacter.h"
 
 void UWKDaShengBrokenAnimInstance::NativeInitializeAnimation()
@@ -28,4 +30,12 @@ void UWKDaShengBrokenAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 void UWKDaShengBrokenAnimInstance::OnEnterStandIdle()
 {
 	bHasStandIdle = true;
+	if (UWKAbilitySystemComponent* ASC = OwnerDaSheng->GetWKAbilitySystemComponent())
+	{
+		ASC->RemoveLooseGameplayTag(WKGameplayTags::Gameplay_State_Invincible);
+	}
+}
+
+void UWKDaShengBrokenAnimInstance::OnEnterSitDownIdle()
+{
 }

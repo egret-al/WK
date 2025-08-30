@@ -9,9 +9,9 @@
 #include "BlackWK/Character/WKCharacterBase.h"
 #include "DataAssets/WKGameplayAbilityDataAsset.h"
 
-UWKAbilitySystemComponent::UWKAbilitySystemComponent()
+UWKAbilitySystemComponent::UWKAbilitySystemComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UWKAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
@@ -111,6 +111,16 @@ void UWKAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inpu
 			}
 		}
 	}
+}
+
+void UWKAbilitySystemComponent::AddGameplayTag(FGameplayTag AddToTag)
+{
+	AddLooseGameplayTag(AddToTag);
+}
+
+void UWKAbilitySystemComponent::RemoveGameplayTag(FGameplayTag RemoveTag)
+{
+	RemoveLooseGameplayTag(RemoveTag);
 }
 
 FSimpleMulticastDelegate& UWKAbilitySystemComponent::WKAbilityReplicatedEventDelegate(EAbilityGenericReplicatedEvent::Type EventType, FGameplayAbilitySpecHandle AbilityHandle, FPredictionKey AbilityOriginalPredictionKey)

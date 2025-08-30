@@ -23,6 +23,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnEnterStandIdle();
 
+	UFUNCTION(BlueprintCallable)
+	void OnEnterSitDownIdle();
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "References")
 	TWeakObjectPtr<AWKAIDaShengCharacter> OwnerDaSheng;

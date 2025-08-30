@@ -17,6 +17,7 @@ class BLACKWK_API UWKGameplayStatics : public UGameplayStatics
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintPure)
 	static bool WorldIsGame(const UObject* WorldContextObj);
 
 	UFUNCTION(BlueprintPure)

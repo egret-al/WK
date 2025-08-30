@@ -55,6 +55,9 @@ public:
 protected:
 	virtual void OnAbilitySystemInitialized();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_OnAbilitySystemInitialized();
+
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WKCharacter")
 	FText CharacterName;

@@ -134,6 +134,8 @@ void AWKCharacterBase::OnAbilitySystemInitialized()
 	check(ASC);
 
 	HealthComponent->InitializeWithAbilitySystem(ASC);
+
+	K2_OnAbilitySystemInitialized();
 }
 
 void AWKCharacterBase::OnBeginPlay()

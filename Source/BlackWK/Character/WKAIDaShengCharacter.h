@@ -11,4 +11,7 @@ UCLASS()
 class BLACKWK_API AWKAIDaShengCharacter : public AWKAICharacterBase, public IWKAbilitySourceInterface
 {
 	GENERATED_BODY()
+
+public:
+	virtual void BeginPlay() override;
 };

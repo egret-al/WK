@@ -97,6 +97,7 @@ void UWKPlayerCharacterInputComponent::InitializePlayerInput(UInputComponent* Pl
 		TArray<uint32> BindHandles;
 		EnhancedInputComponent->BindAbilityActions(PawnData->InputConfig, this, &ThisClass::Input_AbilityInputTagPressed, &ThisClass::Input_AbilityInputTagReleased, BindHandles);
 		EnhancedInputComponent->BindNativeAction(PawnData->InputConfig, TEXT("Move"), ETriggerEvent::Triggered, this, &ThisClass::Input_Move, false);
+		EnhancedInputComponent->BindNativeAction(PawnData->InputConfig, TEXT("Move"), ETriggerEvent::Completed, this, &ThisClass::Input_Move, false);
 		EnhancedInputComponent->BindNativeAction(PawnData->InputConfig, TEXT("Look_Mouse"), ETriggerEvent::Triggered, this, &ThisClass::Input_LookMouse, false);
 	}
 
@@ -108,8 +109,23 @@ void UWKPlayerCharacterInputComponent::InitializePlayerInput(UInputComponent* Pl
 
 void UWKPlayerCharacterInputComponent::Input_Move(const FInputActionValue& InputActionValue)
 {
-	APawn* Pawn = Cast<APawn>(GetOwner());
-	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
+	AWKCharacterBase* Pawn = Cast<AWKCharacterBase>(GetOwner());
+	if (!Pawn)
+	{
+		return;
+	}
+
+	if (UAbilitySystemComponent* ASC = Pawn->GetAbilitySystemComponent())
+	{
+		if (ASC->HasMatchingGameplayTag(WKGameplayTags::Gameplay_State_Input_BlockMove))
+		{
+			// 阻塞了移动输入，不让移动
+			MoveInput = FVector2D();
+			return;
+		}
+	}
+	
+	AController* Controller = Pawn->GetController();
 	
 	const FVector2D Value = InputActionValue.Get<FVector2D>();
 	const FRotator MovementRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
@@ -125,6 +141,13 @@ void UWKPlayerCharacterInputComponent::Input_Move(const FInputActionValue& Input
 		const FVector MovementDirection = MovementRotation.RotateVector(FVector::ForwardVector);
 		Pawn->AddMovementInput(MovementDirection, Value.Y);
 	}
+
+	MoveInput = Value;
+}
+
+void UWKPlayerCharacterInputComponent::Input_Move_Complete(const FInputActionValue& InputActionValue)
+{
+	MoveInput = FVector2D();
 }
 
 void UWKPlayerCharacterInputComponent::Input_LookMouse(const FInputActionValue& InputActionValue)
