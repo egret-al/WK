@@ -14,4 +14,7 @@ class BLACKWK_API AWKAIDaShengCharacter : public AWKAICharacterBase, public IWKA
 
 public:
 	virtual void BeginPlay() override;
+
+protected:
+	virtual AWKCharacterBase* GetCurrentTarget() override;
 };

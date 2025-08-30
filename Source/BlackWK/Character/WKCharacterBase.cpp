@@ -15,7 +15,7 @@
 AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer
 		.SetDefaultSubobjectClass<UWKCharacterMovementComponent>(CharacterMovementComponentName)
-		.SetDefaultSubobjectClass<UWKSkeletalMeshComponent>(ACharacter::MeshComponentName))
+		.SetDefaultSubobjectClass<UWKSkeletalMeshComponent>(MeshComponentName))
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bAlwaysRelevant = true;

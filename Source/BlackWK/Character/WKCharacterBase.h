@@ -23,7 +23,7 @@ class BLACKWK_API AWKCharacterBase : public ACharacter, public IAbilitySystemInt
 	GENERATED_BODY()
 
 public:
-	AWKCharacterBase(const class FObjectInitializer& ObjectInitializer);
+	AWKCharacterBase(const FObjectInitializer& ObjectInitializer);
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void Tick(float DeltaSeconds) override;

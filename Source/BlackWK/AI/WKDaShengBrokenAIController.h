@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "WKAIController.h"
 #include "WKAIStateInterface.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "WKDaShengBrokenAIController.generated.h"
 
 class AWKCharacterBase;
@@ -26,6 +27,7 @@ public:
 
 	/// IWKAIStateInterface
 	virtual bool HasSawEnemyTarget() override;
+	virtual AWKCharacterBase* GetCurrentTarget() override;
 	/// ~IWKAIStateInterface
 
 protected:

@@ -30,12 +30,4 @@ public:
 	/// ~IWKLockableInterface
 	
 protected:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "WK|UI")
-	TSubclassOf<UWKFloatingStatusBarWidget> UIFloatingStatusBarClass;
-
-	UPROPERTY()
-	TObjectPtr<UWKFloatingStatusBarWidget> UIFloatingStatusBar;
-
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "WK|UI")
-	TObjectPtr<UWidgetComponent> UIFloatingStatusBarComponent;
 };

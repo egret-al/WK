@@ -41,6 +41,7 @@ public:
 	
 	virtual bool IsPlayingRootMotion_Direct() const;
 
+	UFUNCTION(BlueprintCallable)
 	void SetDisableRootMotion(bool IsDisable);
 	
 	/** 

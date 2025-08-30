@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "WKAIStateInterface.generated.h"
 
+class AWKCharacterBase;
+
 UINTERFACE()
 class UWKAIStateInterface : public UInterface
 {
@@ -18,4 +20,5 @@ class BLACKWK_API IWKAIStateInterface
 
 public:
 	virtual bool HasSawEnemyTarget() { return false; }
+	virtual AWKCharacterBase* GetCurrentTarget() { return nullptr; }
 };

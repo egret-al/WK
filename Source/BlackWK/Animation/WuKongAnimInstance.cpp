@@ -75,7 +75,6 @@ void UWuKongAnimInstance::UpdateRotationValues()
 {
 	MovementDirection = CalculateMovementDirection();
 	
-	// 两种计算TurnAngle的方法等价
 	FVector CurrentAcceleration = OwnerWuKong->GetCharacterMovement()->GetCurrentAcceleration();
 	FVector LocalAcceleration = UKismetMathLibrary::LessLess_VectorRotator(CurrentAcceleration, OwnerWuKong->GetActorRotation());
 	TurnAngle = UKismetMathLibrary::DegAtan2(LocalAcceleration.Y, LocalAcceleration.X);

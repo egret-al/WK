@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "WKAnimInstanceBase.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "WKDaShengBrokenAnimInstance.generated.h"
 
+class UBlackboardComponent;
+class AWKDaShengBrokenAIController;
 class AWKAIDaShengCharacter;
 
 /**
@@ -27,8 +30,19 @@ protected:
 	void OnEnterSitDownIdle();
 
 protected:
+	void UpdateState();
+	void UpdateTreeInfo();
+	void UpdateMovement();
+
+protected:
 	UPROPERTY(BlueprintReadOnly, Category = "References")
 	TWeakObjectPtr<AWKAIDaShengCharacter> OwnerDaSheng;
+
+	UPROPERTY(BlueprintReadOnly, Category = "References")
+	TObjectPtr<AWKDaShengBrokenAIController> OwnerController;
+
+	UPROPERTY(BlueprintReadOnly, Category = "References")
+	TObjectPtr<UBlackboardComponent> BlackboardComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
 	bool bHasSawTarget = false;
@@ -38,4 +52,13 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bHasStandIdle = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	float TurnAngle = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "BehaviorTree")
+	bool bFollowTarget = false;
+
+private:
+	void InitInstanceInfo();
 };

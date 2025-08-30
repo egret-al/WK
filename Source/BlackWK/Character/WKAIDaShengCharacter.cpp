@@ -15,3 +15,12 @@ void AWKAIDaShengCharacter::BeginPlay()
 		ASC->AddLooseGameplayTag(WKGameplayTags::Gameplay_State_Invincible);
 	}
 }
+
+AWKCharacterBase* AWKAIDaShengCharacter::GetCurrentTarget()
+{
+	if (IWKAIStateInterface* ControllerInterface = Cast<IWKAIStateInterface>(GetController()))
+	{
+		return ControllerInterface->GetCurrentTarget();
+	}
+	return nullptr;
+}
