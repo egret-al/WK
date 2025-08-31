@@ -33,6 +33,7 @@ protected:
 	void UpdateState();
 	void UpdateTreeInfo();
 	void UpdateMovement();
+	void UpdateForward();
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "References")
@@ -55,6 +56,17 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Move")
 	float TurnAngle = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Move")
+	float Forward = 1.f;
+
+	// 距离目标在这个距离范围内，就停下
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig")
+	float DistanceToStop = 300.f;
+
+	// 停下的插值速度
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig")
+	float DistanceToStopInterpSpeed = 10.f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "BehaviorTree")
 	bool bFollowTarget = false;

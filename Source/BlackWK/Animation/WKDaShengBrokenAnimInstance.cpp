@@ -96,6 +96,23 @@ void UWKDaShengBrokenAnimInstance::UpdateMovement()
 	FVector Direction = CurrentTarget->GetActorLocation() - OwnerDaSheng->GetActorLocation();
 	FVector LocalDirection = UKismetMathLibrary::LessLess_VectorRotator(Direction, OwnerDaSheng->GetActorRotation());
 	TurnAngle = UKismetMathLibrary::DegAtan2(LocalDirection.Y, LocalDirection.X);
+
+	UpdateForward();
+}
+
+void UWKDaShengBrokenAnimInstance::UpdateForward()
+{
+	FVector TargetLocation = CurrentTarget->GetActorLocation();
+	FVector ActorLocation = OwnerDaSheng->GetActorLocation();
+
+	float TargetForward = 1.f;
+	if (FVector::DistSquared2D(TargetLocation, ActorLocation) <= DistanceToStop * DistanceToStop)
+	{
+		// 距离目标太近了
+		TargetForward = 0.f;
+	}
+
+	Forward = UKismetMathLibrary::Lerp(Forward, TargetForward, GetWorld()->GetDeltaSeconds() * DistanceToStopInterpSpeed);
 }
 
 void UWKDaShengBrokenAnimInstance::InitInstanceInfo()

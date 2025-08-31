@@ -42,20 +42,24 @@ AWKCharacterBase* AWKDaShengBrokenAIController::GetCurrentTarget()
 void AWKDaShengBrokenAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	// 已经有目标了
-	if (bHasSawTarget)
+	if (Stimulus.WasSuccessfullySensed() && bHasSawTarget)
 	{
 		return;
 	}
-	CurrentTarget = Cast<AWKCharacterBase>(Actor);
 
-	// 是否成功看见了
-	if (Stimulus.WasSuccessfullySensed())
+	if (!Stimulus.WasSuccessfullySensed())
+	{
+		// 丢失目标
+		bHasSawTarget = false;
+		CurrentTarget = nullptr;
+	}
+	else
 	{
 		bHasSawTarget = true;
+		CurrentTarget = Cast<AWKCharacterBase>(Actor);
 	}
-
 	// 更新行为树
 	UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
-	BlackboardComponent->SetValueAsBool(FName(TEXT("HasSeeingTarget")), Stimulus.WasSuccessfullySensed());
+	BlackboardComponent->SetValueAsBool(FName(TEXT("HasSeeingTarget")), bHasSawTarget);
 	BlackboardComponent->SetValueAsObject(FName(TEXT("CurrentTarget")), CurrentTarget.Get());
 }
