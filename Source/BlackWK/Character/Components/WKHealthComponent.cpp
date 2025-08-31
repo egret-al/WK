@@ -10,7 +10,6 @@ UWKHealthComponent::UWKHealthComponent(const FObjectInitializer& ObjectInitializ
 	: Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bStartWithTickEnabled = false;
-	PrimaryComponentTick.bCanEverTick = false;
 
 	SetIsReplicatedByDefault(true);
 

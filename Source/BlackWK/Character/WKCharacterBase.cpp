@@ -6,6 +6,7 @@
 #include "WKCharacterMovementComponent.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
+#include "BlackWK/Player/WKPlayerState.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WKHealthComponent.h"
 #include "Components/WKSkeletalMeshComponent.h"
@@ -17,17 +18,19 @@ AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
 		.SetDefaultSubobjectClass<UWKCharacterMovementComponent>(CharacterMovementComponentName)
 		.SetDefaultSubobjectClass<UWKSkeletalMeshComponent>(MeshComponentName))
 {
-	PrimaryActorTick.bCanEverTick = false;
 	bAlwaysRelevant = true;
-
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
-
 	HealthComponent = CreateDefaultSubobject<UWKHealthComponent>(TEXT("HealthComponent"));
 }
 
 void AWKCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (AWKPlayerState* PS = Cast<AWKPlayerState>(GetPlayerState()))
+	{
+		PS->SetPawnData(PawnData);
+	}
 
 	OnBeginPlay();
 }

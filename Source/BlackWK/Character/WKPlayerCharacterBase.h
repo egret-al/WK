@@ -35,16 +35,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	FVector GetStartingCameraBoomLocation();
 
-	UWKFloatingStatusBarWidget* GetFloatingStatusBar();
-
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
 	void Input_Lock(const FInputActionValue& InputActionValue);
-
-	UFUNCTION()
-	void InitializeFloatingStatusBar();
 
 protected:
 	void UpdateLockTargetCameraLocation();
@@ -71,26 +66,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Camera")
 	UCameraComponent* FollowCamera;
 
-	// UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-	// USkeletalMeshComponent* GunComponent;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "WKConfig|UI")
-	TSubclassOf<UWKFloatingStatusBarWidget> UIFloatingStatusBarClass;
-
-	UPROPERTY()
-	UWKFloatingStatusBarWidget* UIFloatingStatusBar;
-
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
-	UWidgetComponent* UIFloatingStatusBarComponent;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
 	TObjectPtr<UInputMappingContext> IMC_Default;
-
-	// UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
-	// TObjectPtr<UInputAction> IA_Move;
-	//
-	// UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
-	// TObjectPtr<UInputAction> IA_LookMouse;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
 	TObjectPtr<UInputAction> IA_Lock;

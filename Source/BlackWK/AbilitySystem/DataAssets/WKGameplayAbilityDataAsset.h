@@ -79,7 +79,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Priority")
 	FWKGameplayAbilityPriorityInfo PriorityInfo;
 
-	// 技能标识
+	// 技能标识，动态修改技能优先级时会用到
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKConfig|Priority")
 	FGameplayTag AbilityTag;
 

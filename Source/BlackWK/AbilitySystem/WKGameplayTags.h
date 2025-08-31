@@ -16,5 +16,7 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_ShouldMove);
 	
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill01);
+	
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString = false);
 }

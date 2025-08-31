@@ -10,7 +10,6 @@
 AWKDaShengBrokenAIController::AWKDaShengBrokenAIController()
 {
 	AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception"));
-
 }
 
 void AWKDaShengBrokenAIController::BeginPlay()
@@ -60,6 +59,16 @@ void AWKDaShengBrokenAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIS
 	}
 	// 更新行为树
 	UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
-	BlackboardComponent->SetValueAsBool(FName(TEXT("HasSeeingTarget")), bHasSawTarget);
+	BlackboardComponent->SetValueAsBool(FName(TEXT("HasSawTarget")), bHasSawTarget);
 	BlackboardComponent->SetValueAsObject(FName(TEXT("CurrentTarget")), CurrentTarget.Get());
+
+	if (CurrentTarget.IsValid())
+	{
+		const float Dist2D = FVector::Dist2D(GetPawn()->GetActorLocation(), CurrentTarget->GetActorLocation());
+		BlackboardComponent->SetValueAsFloat(FName(TEXT("DistanceToTarget")), Dist2D);	
+	}
+	else
+	{
+		BlackboardComponent->SetValueAsFloat(FName(TEXT("DistanceToTarget")), 0x3f3f3f3f);
+	}
 }

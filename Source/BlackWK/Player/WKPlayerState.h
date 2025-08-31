@@ -50,7 +50,7 @@ protected:
 	void OnRep_PawnData();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_PawnData)
+	UPROPERTY(ReplicatedUsing = OnRep_PawnData)
 	TObjectPtr<const UWKPawnData> PawnData;
 	
 protected:

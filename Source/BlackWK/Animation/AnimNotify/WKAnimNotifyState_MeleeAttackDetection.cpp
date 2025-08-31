@@ -427,8 +427,7 @@ void UWKAnimNotifyState_MeleeAttackDetection::NotifyTick(USkeletalMeshComponent*
 
 
 	// 调试武器碰撞
-	// const float DebugDrawDuration = FWKWeaponConsoleVariables::CVarDebugMeleeCollision.GetValueOnAnyThread();
-	const float DebugDrawDuration = 0;
+	const float DebugDrawDuration = FWKWeaponConsoleVariables::CVarDebugMeleeCollision.GetValueOnAnyThread();
 	if (DebugDrawDuration > 0)
 	{
 		UWorld* MyWorld = MeshComp->GetWorld();

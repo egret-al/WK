@@ -32,11 +32,6 @@ UWKPlayerCharacterInputComponent* UWKPlayerCharacterInputComponent::FindPlayerCh
 void UWKPlayerCharacterInputComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
-	{
-		InitializePlayerInput(OwnerPawn->GetController()->InputComponent);
-	}
 }
 
 void UWKPlayerCharacterInputComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)

@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "WKCharacterBase.generated.h"
 
+class UWKPawnData;
 class UGameplayEffect;
 class UWKGameplayAbility;
 class UWKAttributeSetBase;
@@ -79,6 +80,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WKCharacter|Character")
 	TObjectPtr<UWKHealthComponent> HealthComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "WKConfig")
+	TObjectPtr<const UWKPawnData> PawnData;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", Replicated)

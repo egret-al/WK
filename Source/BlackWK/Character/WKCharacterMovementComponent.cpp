@@ -22,6 +22,5 @@ static FTransform FixRootMotionTransformStatic(const FTransform& InTransform, UC
 UWKCharacterMovementComponent::UWKCharacterMovementComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	PrimaryComponentTick.bCanEverTick = true;
 	ProcessRootMotionPostConvertToWorld.BindStatic(FixRootMotionTransformStatic);
 }

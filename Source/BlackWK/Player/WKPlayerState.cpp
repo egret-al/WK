@@ -54,17 +54,20 @@ UWKAbilitySystemComponent* AWKPlayerState::GetWKAbilitySystemComponent() const
 
 void AWKPlayerState::SetPawnData(const UWKPawnData* InPawnData)
 {
-	check(InPawnData);
+	if (!InPawnData)
+	{
+		return;
+	}
 
 	if (GetLocalRole() != ROLE_Authority)
 	{
 		return;
 	}
 
-	// if (PawnData)
-	// {
-	// 	return;
-	// }
+	if (PawnData)
+	{
+		return;
+	}
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PawnData, this);
 	PawnData = InPawnData;

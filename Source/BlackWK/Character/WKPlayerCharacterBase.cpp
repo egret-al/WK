@@ -11,11 +11,10 @@
 #include "BlackWK/Player/WKPlayerState.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
 #include "BlackWK/Animation/WKAnimInstanceExtensionInterface.h"
-#include "BlackWK/UI/WKFloatingStatusBarWidget.h"
+#include "BlackWK/Input/WKPlayerCharacterInputComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -43,20 +42,6 @@ AWKPlayerCharacterBase::AWKPlayerCharacterBase(const FObjectInitializer& ObjectI
 
 	bUseControllerRotationYaw = false;
 
-	UIFloatingStatusBarComponent = CreateDefaultSubobject<UWidgetComponent>(FName("UIFloatingStatusBarComponent"));
-	UIFloatingStatusBarComponent->SetupAttachment(RootComponent);
-	UIFloatingStatusBarComponent->SetRelativeLocation(FVector(0, 0, 120));
-	UIFloatingStatusBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	UIFloatingStatusBarComponent->SetDrawSize(FVector2D(500, 500));
-
-	UIFloatingStatusBarClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/Game/_Game/UI/Widget/WBP_PlayerFloatingStatusBar.WBP_PlayerFloatingStatusBar_C"));
-	if (!UIFloatingStatusBarClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s() Failed to find UIFloatingStatusBarClass. If it was moved, please update the reference location in C++."), *FString(__FUNCTION__));
-	}
-
-	// AIControllerClass = AGDHeroAIController::StaticClass();
-
 	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
 }
 
@@ -64,10 +49,13 @@ void AWKPlayerCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitializeFloatingStatusBar();
-
 	StartingCameraBoomArmLength = CameraBoom->TargetArmLength;
 	StartingCameraBoomLocation = CameraBoom->GetRelativeLocation();
+
+	if (UWKPlayerCharacterInputComponent* WKInputComponent = UWKPlayerCharacterInputComponent::FindPlayerCharacterInputComponent(this))
+	{
+		WKInputComponent->InitializePlayerInput(GetController()->InputComponent);
+	}
 }
 
 void AWKPlayerCharacterBase::PostInitializeComponents()
@@ -162,7 +150,6 @@ void AWKPlayerCharacterBase::PossessedBy(AController* NewController)
 			PC->CreateHUD();
 		}
 
-		InitializeFloatingStatusBar();
 
 		OnAbilitySystemInitialized();
 	}
@@ -186,34 +173,6 @@ float AWKPlayerCharacterBase::GetStartingCameraBoomArmLength()
 FVector AWKPlayerCharacterBase::GetStartingCameraBoomLocation()
 {
 	return StartingCameraBoomLocation;
-}
-
-UWKFloatingStatusBarWidget* AWKPlayerCharacterBase::GetFloatingStatusBar()
-{
-	return UIFloatingStatusBar;
-}
-
-void AWKPlayerCharacterBase::InitializeFloatingStatusBar()
-{
-	// Only create once
-	if (UIFloatingStatusBar || !AbilitySystemComponent.Get())
-	{
-		return;
-	}
-	
-	// Setup UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
-	AWKPlayerController* PC = Cast<AWKPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	if (PC && PC->IsLocalPlayerController())
-	{
-		if (UIFloatingStatusBarClass)
-		{
-			UIFloatingStatusBar = CreateWidget<UWKFloatingStatusBarWidget>(PC, UIFloatingStatusBarClass);
-			if (UIFloatingStatusBar && UIFloatingStatusBarComponent)
-			{
-				UIFloatingStatusBarComponent->SetWidget(UIFloatingStatusBar);
-			}
-		}
-	}
 }
 
 void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
