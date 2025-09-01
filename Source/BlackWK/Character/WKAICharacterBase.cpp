@@ -3,6 +3,8 @@
 
 #include "WKAICharacterBase.h"
 
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AI/WKAIStateInterface.h"
 #include "BlackWK/Player/WKPlayerState.h"
@@ -27,9 +29,27 @@ void AWKAICharacterBase::BeginPlay()
 	AbilitySystemComponent = PS->GetWKAbilitySystemComponent();
 
 	AbilitySystemComponent->InitAbilityActorInfo(GetPlayerState(), this);
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-
 	OnAbilitySystemInitialized();
+
+	AAIController* AIController = Cast<AAIController>(GetController());
+	check(AIController);
+	BlackboardComponent = AIController->GetBlackboardComponent();
+}
+
+bool AWKAICharacterBase::IsPlayerCharacter()
+{
+	return false;
+}
+
+AWKCharacterBase* AWKAICharacterBase::GetCurrentAttackLockTarget() const
+{
+	if (!BlackboardComponent)
+	{
+		return nullptr;
+	}
+
+	UObject* CurrentTarget = BlackboardComponent->GetValueAsObject(FName(TEXT("CurrentTarget")));
+	return Cast<AWKCharacterBase>(CurrentTarget);
 }
 
 bool AWKAICharacterBase::HasSawEnemyTarget()

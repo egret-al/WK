@@ -7,11 +7,21 @@
 #include "Abilities/WKGameplayAbility.h"
 #include "BlackWK/Animation/WKAnimInstanceBase.h"
 #include "BlackWK/Character/WKCharacterBase.h"
+#include "BlackWK/Character/WKPlayerCharacterBase.h"
+#include "BlackWK/Player/WKPlayerController.h"
 #include "DataAssets/WKGameplayAbilityDataAsset.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UWKAbilitySystemComponent::UWKAbilitySystemComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+}
+
+void UWKAbilitySystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	UpdateRotatorControlToTarget(DeltaTime);
 }
 
 void UWKAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
@@ -414,6 +424,67 @@ void UWKAbilitySystemComponent::ClearAbilityReplicatedDataCacheEx(FGameplayAbili
 		{
 			It.Value().TargetData.Clear();
 			It.RemoveCurrent();  // 安全删除当前元素
+		}
+	}
+}
+
+void UWKAbilitySystemComponent::ProcessRotatorControlToTarget(AActor* Target)
+{
+	if (!RotatorControlToTarget)
+	{
+		return;
+	}
+	
+	if (const AWKCharacterBase* Owner = Cast<AWKCharacterBase>(GetAvatarActor()); !Owner->IsLocallyControlled())
+	{
+		return;
+	}
+	
+	if (IsValid(Target))
+	{
+		TurnToTarget = Target;
+		//SpringState.Reset();
+		RotatorControlToTargetTimer = 0.f;
+	}
+}
+
+void UWKAbilitySystemComponent::UpdateRotatorControlToTarget(float DeltaTime)
+{
+	if (IsValid(TurnToTarget.Get()) && IsValid(GetOwner()))
+	{
+		if (RotatorControlToTargetTimer < RotatorDuration)
+		{
+			RotatorControlToTargetTimer += DeltaTime;
+
+			// if (const AWKPlayerCharacterBase* Owner = Cast<AWKPlayerCharacterBase>(GetAvatarActor()); IsValid(Owner))
+			// {
+			// 	if (IsValid(Owner->GetPlayerController()) && !Owner->GetPlayerController()->bHasRotationInputThisFrame)
+			// 	{
+			// 		//UE_LOG(DSLogGAS, Warning, TEXT("没有转向输入，自动转向"));
+			// 		FRotator CharacterRotator = UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(),TurnToTarget->GetActorLocation());
+			// 		FVector StartLocation = Owner->GetActorLocation() + CharacterRotator.RotateVector(Cast<UDSCameraMode_ThirdPerson>(Owner->GetDSCameraComponent()->DefaultCameraMode.GetDefaultObject())->CameraLocationOffset + Owner->GetDSCameraComponent()->CameraLocationOffsetAdditive);
+			// 		FRotator CurrentRotator = Owner->GetController()->GetControlRotation();
+			// 		FRotator TargetRotator = UKismetMathLibrary::FindLookAtRotation(StartLocation,TurnToTarget->GetActorLocation());
+			// 		
+			// 		FRotator ResultRotator = FMath::RInterpTo( CurrentRotator,TargetRotator, DeltaTime, InterpSpeed);
+			// 		Owner->GetController()->SetControlRotation(ResultRotator);
+			// 		
+			// 		//FQuat TargetRotator = UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(),TurnToTarget->GetActorLocation()).Quaternion(); 
+			// 		//FQuat CurrentRotator = Owner->GetController()->GetControlRotation().Quaternion();	
+			// 		//FQuat ResultRotator = UKismetMathLibrary::QuaternionSpringInterp(CurrentRotator, TargetRotator, SpringState, Stiffness, CriticalDamping,DeltaTime, Mass, TargetVelocityAmount);
+			// 		//Owner->GetController()->SetControlRotation(ResultRotator.Rotator());
+			// 	}
+			// 	else
+			// 	{
+			// 		//UE_LOG(DSLogGAS, Warning, TEXT("有转向输入，停止自动转向"));
+			// 		//有输入了，直接打断本次转向
+			// 		TurnToTarget.Reset();
+			// 	}
+			// }
+		}
+		else
+		{
+			TurnToTarget.Reset();
 		}
 	}
 }

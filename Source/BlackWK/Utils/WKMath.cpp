@@ -90,3 +90,29 @@ float FWKMath::CalculateDirection(const FVector& InVector, const FRotator& BaseR
 
 	return ForwardDeltaDegree;
 }
+
+float FWKMath::AngleBetweenVectors(const FVector& Vec1, const FVector& Vec2)
+{
+	if (Vec1.IsNearlyZero() || Vec2.IsNearlyZero())
+	{
+		return 0.f;
+	}
+	
+	const float Dot = FVector::DotProduct(Vec1.GetSafeNormal(), Vec2.GetSafeNormal());
+	const float Angle = FMath::RadiansToDegrees(FMath::Acos(Dot));
+	return Angle;
+}
+
+float FWKMath::AngleBetweenVectors_Horizontal(const FVector& v1, const FVector& v2)
+{
+	const FVector V1 {v1.X, v1.Y, 0.f};
+	const FVector V2 {v2.X, v2.Y, 0.f};
+	return AngleBetweenVectors(V1, V2);
+}
+
+float FWKMath::AngleBetweenVectors_Vertical(const FVector& v1, const FVector& v2)
+{
+	const double Radian1 = acos(v1.Z / v1.Length());
+	const double Radian2 = acos(v2.Z / v2.Length());
+	return FMath::RadiansToDegrees(abs(Radian1 - Radian2));
+}

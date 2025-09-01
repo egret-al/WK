@@ -46,6 +46,40 @@ UWKWidgetHUD* AWKPlayerController::GetHUD()
 	return UIHUDWidget;
 }
 
+void AWKPlayerController::SetRotationYawLimitBaseNow(float LimitYawInDegrees, FRotator InLimitRotationBase)
+{
+	bIsLimitRotationYaw = true;
+	if (InLimitRotationBase == FRotator::ZeroRotator)
+	{
+		LimitRotationBase = GetControlRotation();
+	}
+	else
+	{
+		LimitRotationBase = InLimitRotationBase;
+	}
+	LimitYaw = LimitYawInDegrees;
+}
+
+void AWKPlayerController::SetRotationPitchLimitBaseNow(float LimitPitchInDegrees, FRotator InLimitRotationBase)
+{
+	bIsLimitRotationPitch = true;
+	if (InLimitRotationBase == FRotator::ZeroRotator)
+	{
+		LimitRotationBase = GetControlRotation();
+	}
+	else
+	{
+		LimitRotationBase = InLimitRotationBase;
+	}
+	LimitPitch = LimitPitchInDegrees;
+}
+
+void AWKPlayerController::ClearRotationLimit()
+{
+	bIsLimitRotationYaw = false;
+	bIsLimitRotationPitch = false;
+}
+
 void AWKPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -76,4 +110,53 @@ void AWKPlayerController::PostProcessInput(const float DeltaTime, const bool bGa
 	// }
 	
 	Super::PostProcessInput(DeltaTime, bGamePaused);
+}
+
+void AWKPlayerController::UpdateRotation(float DeltaTime)
+{
+	if (bLockControlRotation)
+	{
+		RotationInput = FRotator::ZeroRotator;
+	}
+	//限制转向速度
+	RotationInput *= TurnRate;
+
+	if (bIsLimitRotationYaw)
+	{
+		const FRotator DeltaRot(RotationInput);
+		const FRotator OldRot = GetControlRotation();
+		const float NewYaw = OldRot.Yaw + DeltaRot.Yaw;
+		const float DeltaAngle = FMath::FindDeltaAngleDegrees(NewYaw, LimitRotationBase.Yaw);
+		//超过限制忽略输入
+		if (DeltaAngle < (-1 * LimitYaw / 2) || DeltaAngle>(LimitYaw / 2))
+		{
+			RotationInput.Yaw = 0.f;
+		}
+	}
+	if (bIsLimitRotationPitch)
+	{
+		const FRotator DeltaRot(RotationInput);
+		const FRotator OldRot = GetControlRotation();
+		const float NewPitch = OldRot.Pitch + DeltaRot.Pitch;
+		const float DeltaAngle = FMath::FindDeltaAngleDegrees(NewPitch, LimitRotationBase.Pitch);
+		// 超过限制忽略输入
+		if (DeltaAngle < -1 * LimitPitch / 2 || DeltaAngle> LimitPitch / 2)
+		{
+			RotationInput.Pitch = 0.f;
+		}
+	}
+	
+	bHasRotationInputThisFrame = !RotationInput.IsNearlyZero(0.001f);
+	
+	Super::UpdateRotation(DeltaTime);
+}
+
+void AWKPlayerController::SetTurnRate(float NewRate)
+{
+	TurnRate = FMath::Clamp(NewRate, 0.f, 100.f);
+}
+
+void AWKPlayerController::ResetTurnRate()
+{
+	TurnRate = 1.f;
 }

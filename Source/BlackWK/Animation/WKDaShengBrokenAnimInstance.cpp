@@ -93,8 +93,8 @@ void UWKDaShengBrokenAnimInstance::UpdateMovement()
 		return;
 	}
 
-	FVector Direction = CurrentTarget->GetActorLocation() - OwnerDaSheng->GetActorLocation();
-	FVector LocalDirection = UKismetMathLibrary::LessLess_VectorRotator(Direction, OwnerDaSheng->GetActorRotation());
+	FVector Direction = GetTargetLocationFromBlackboard() - OwnerWK->GetActorLocation();
+	FVector LocalDirection = UKismetMathLibrary::LessLess_VectorRotator(Direction, OwnerWK->GetActorRotation());
 	TurnAngle = UKismetMathLibrary::DegAtan2(LocalDirection.Y, LocalDirection.X);
 
 	UpdateForward();
@@ -102,8 +102,9 @@ void UWKDaShengBrokenAnimInstance::UpdateMovement()
 
 void UWKDaShengBrokenAnimInstance::UpdateForward()
 {
-	FVector TargetLocation = CurrentTarget->GetActorLocation();
-	FVector ActorLocation = OwnerDaSheng->GetActorLocation();
+	// 使用行为树计算出来的点位
+	FVector TargetLocation = GetTargetLocationFromBlackboard();
+	FVector ActorLocation = OwnerWK->GetActorLocation();
 
 	float TargetForward = 1.f;
 	if (FVector::DistSquared2D(TargetLocation, ActorLocation) <= DistanceToStop * DistanceToStop)
@@ -113,6 +114,15 @@ void UWKDaShengBrokenAnimInstance::UpdateForward()
 	}
 
 	Forward = UKismetMathLibrary::Lerp(Forward, TargetForward, GetWorld()->GetDeltaSeconds() * DistanceToStopInterpSpeed);
+}
+
+FVector UWKDaShengBrokenAnimInstance::GetTargetLocationFromBlackboard() const
+{
+	if (!BlackboardComponent)
+	{
+		return FVector::ZeroVector;
+	}
+	return BlackboardComponent->GetValueAsVector(FName(TEXT("TargetLocation")));
 }
 
 void UWKDaShengBrokenAnimInstance::InitInstanceInfo()

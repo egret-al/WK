@@ -7,6 +7,7 @@
 #include "WKCharacterBase.h"
 #include "WKPlayerCharacterBase.generated.h"
 
+class AWKPlayerController;
 class UWKFloatingStatusBarWidget;
 struct FInputActionValue;
 class UInputAction;
@@ -35,6 +36,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	FVector GetStartingCameraBoomLocation();
 
+	virtual bool IsPlayerCharacter() override;
+	virtual AWKCharacterBase* GetCurrentAttackLockTarget() const override;
+	
+	FVector2d GetMoveInput() const;
+
+	UFUNCTION(BlueprintPure)
+	AWKPlayerController* GetPlayerController() const;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;

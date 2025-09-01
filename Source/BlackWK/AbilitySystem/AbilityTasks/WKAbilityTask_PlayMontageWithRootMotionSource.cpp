@@ -6,8 +6,10 @@
 #include "AbilitySystemGlobals.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AbilitySystem/Targeting/WKTargetData.h"
+#include "BlackWK/Animation/WKAnimationFunctionLibrary.h"
 #include "BlackWK/Character/WKAICharacterBase.h"
 #include "BlackWK/Character/WKCharacterBase.h"
+#include "BlackWK/Character/WKPlayerCharacterBase.h"
 #include "BlackWK/Player/WKPlayerState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -295,22 +297,21 @@ const bool UWKAbilityTask_PlayMontageWithRootMotionSource::NeedReplicateAutonomo
 			return false;
 		}
 
-		// TArray<const FAnimNotifyEvent*> MatchTargetNotifyEvents = UDSAnimationFunctionLibrary::GetNotifyEventsFromAnimMontage(MontageToPlay, UDSAnimNotifyState_RootMotionWarping::StaticClass(), SectionIndex);
-		// if (!MatchTargetNotifyEvents.IsEmpty())
-		// {
-		// 	for (int i = 0; i < MatchTargetNotifyEvents.Num(); i++)
-		// 	{
-		// 		if (const UWKAnimNotifyState_RootMotionWarping* RootMotionWarpingNotify = Cast<UWKAnimNotifyState_RootMotionWarping>(MatchTargetNotifyEvents[i]->NotifyStateClass))
-		// 		{
-		// 			if (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithTarget
-		// 				|| (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithRotation && RootMotionWarpingNotify->WarpingRotation.RotationType!=	EDSRootMotionRotationType::BaseOnActor))
-		// 				//|| RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithTranslation)
-		// 			{
-		// 				return true;
-		// 			}
-		// 		}
-		// 	}
-		// }
+		TArray<const FAnimNotifyEvent*> MatchTargetNotifyEvents = UWKAnimationFunctionLibrary::GetNotifyEventsFromAnimMontage(MontageToPlay, UWKAnimNotifyState_RootMotionWarping::StaticClass(), SectionIndex);
+		if (!MatchTargetNotifyEvents.IsEmpty())
+		{
+			for (int i = 0; i < MatchTargetNotifyEvents.Num(); i++)
+			{
+				if (const UWKAnimNotifyState_RootMotionWarping* RootMotionWarpingNotify = Cast<UWKAnimNotifyState_RootMotionWarping>(MatchTargetNotifyEvents[i]->NotifyStateClass))
+				{
+					if (RootMotionWarpingNotify->MotionWarpingType == EWKRootMotionWarpingType::WarpingWithTarget
+						|| (RootMotionWarpingNotify->MotionWarpingType == EWKRootMotionWarpingType::WarpingWithRotation && RootMotionWarpingNotify->WarpingRotation.RotationType!=	EWKRootMotionRotationType::BaseOnActor))
+					{
+						return true;
+					}
+				}
+			}
+		}
 
 		//尽量避免所有动画都RPC来同步参数，因为如果Gamplay连续播放两个动画，服务器收到RPC时序不能确保，导致动画播放顺序不对
 		/*if (MontageToPlay->HasRootMotion())
@@ -323,165 +324,438 @@ const bool UWKAbilityTask_PlayMontageWithRootMotionSource::NeedReplicateAutonomo
 
 void UWKAbilityTask_PlayMontageWithRootMotionSource::PrepareReplicateParams()
 {
+	if (AWKCharacterBase* Character = Cast<AWKCharacterBase>(GetAvatarActor()))
+	{
+		ActorRotator = Character->GetActorRotation();
+		MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, ActorRotator, this);
+	
+		TArray<float> OverrideWarpingDistances;
+		TArray<FVector_NetQuantize100> OverrideWarpingDirections;
+		TArray<FVector_NetQuantize100> CustomTargetLocations;
+		TArray<float> OverrideWarpingRotations;
+		FWKOverrideWarpingTargetActorParam OverrideWarpingTargetActorParams;
+		
+		TArray<const FAnimNotifyEvent*> MatchTargetNotifyEvents = UWKAnimationFunctionLibrary::GetNotifyEventsFromAnimMontage(MontageToPlay, UWKAnimNotifyState_RootMotionWarping::StaticClass(), SectionIndex);
+		if (!MatchTargetNotifyEvents.IsEmpty())
+		{
+			float SectionStart = 0;
+			float SectionEnd = MontageToPlay->GetPlayLength();
+			if (SectionIndex != INDEX_NONE)
+			{
+				MontageToPlay->GetSectionStartAndEndTime(SectionIndex, SectionStart, SectionEnd);
+			}
+			SectionStart += StartTime;
+	
+			//只获取一次TargetActor
+			bool bFindTargetActor =  false;
+			
+			for (int i = 0; i < MatchTargetNotifyEvents.Num(); i++)
+			{
+				const FAnimNotifyEvent* Event = MatchTargetNotifyEvents[i];
+				if (Event->GetEndTriggerTime() <= SectionStart || Event->GetTriggerTime() >= SectionEnd)
+					continue;
+				
+				if (const UWKAnimNotifyState_RootMotionWarping* RootMotionWarpingNotify = Cast<UWKAnimNotifyState_RootMotionWarping>(MatchTargetNotifyEvents[i]->NotifyStateClass))
+				{
+					if (RootMotionWarpingNotify->MotionWarpingType == EWKRootMotionWarpingType::WarpingWithTarget)
+					{
+						if (IsValid(RootMotionWarpingNotify->WarpingTargetActor.TargetCatchRule))
+						{
+							if(!bFindTargetActor)
+							{
+								//应用特异性位移增加锁敌距离
+								UWKTargetCatchRule_PlayerCamera* TargetCatchRule = Cast<UWKTargetCatchRule_PlayerCamera>(RootMotionWarpingNotify->WarpingTargetActor.TargetCatchRule.Get());
+								if(IsValid(TargetCatchRule) && RootMotionWarpingNotify->WarpingTargetActor.bApplySpecificity)
+								{
+									TargetCatchRule->bApplySpecificity = true;
+								}
+								
+								PlayerTarget = RootMotionWarpingNotify->WarpingTargetActor.TargetCatchRule.Get()->TargetSearch(Character,Ability);
+								MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, PlayerTarget, this);
+								
+								bFindTargetActor = true;
+							}
+						}
+						if (IsValid(RootMotionWarpingNotify->WarpingTargetActor.OverrideWarpingTargetActor ))
+						{
+							OverrideWarpingTargetActorParams = RootMotionWarpingNotify->WarpingTargetActor.OverrideWarpingTargetActor.Get()->GetOverrideWarpingTargetParam(Character,Ability);
+						}
+					}
+	
+					if (RootMotionWarpingNotify->MotionWarpingType == EWKRootMotionWarpingType::WarpingWithRotation)
+					{
+						switch(RootMotionWarpingNotify->WarpingRotation.RotationType)
+						{
+						case EWKRootMotionRotationType::BaseOnActor:
+							if (IsValid(RootMotionWarpingNotify->WarpingRotation.OverrideWarpingRotation))
+							{
+								OverrideWarpingRotations.Add(RootMotionWarpingNotify->WarpingRotation.OverrideWarpingRotation.Get()->GetOverrideWarpingRotation(Character,Ability));
+							}
+							break;
+						case EWKRootMotionRotationType::TurnToTarget:
+							if (IsValid(RootMotionWarpingNotify->WarpingRotation.TargetCatchRule))
+							{
+								if(!bFindTargetActor)
+								{
+									PlayerTarget = RootMotionWarpingNotify->WarpingRotation.TargetCatchRule.Get()->TargetSearch(Character,Ability);
+									MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, PlayerTarget, this);
+	
+									bFindTargetActor = true;
+								}
+							}
+							break;
+						case EWKRootMotionRotationType::BaseOnController:
+							ControlRotator =  Character->GetControlRotation();
+							MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, ControlRotator, this);
+	
+							break;
+						case EWKRootMotionRotationType::BaseOnInput:
+							{
+								ControlRotator =  Character->GetControlRotation();
+								MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, ControlRotator, this);
+								AWKPlayerCharacterBase* PlayerCharacter = Cast<AWKPlayerCharacterBase>(Character);
+								CharacterMoveInput = FVector(PlayerCharacter->GetMoveInput().X, PlayerCharacter->GetMoveInput().Y, 0);
+								MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, CharacterMoveInput, this);
+							}
+							break;
+						default:
+							break;
+						}
+					}
+	
+					if (RootMotionWarpingNotify->MotionWarpingType == EWKRootMotionWarpingType::WarpingWithTranslation)
+					{
+						if (IsValid(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDistance ))
+						{
+							OverrideWarpingDistances.Add(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDistance.Get()->GetOverrideWarpingDistance(Character,Ability));
+						}
+	
+						if (IsValid(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDirection))
+						{
+							OverrideWarpingDirections.Add(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDirection.Get()->GetOverrideWarpingDirection(Character,Ability));
+						}
+					}
+	
+					if (RootMotionWarpingNotify->MotionWarpingType == EWKRootMotionWarpingType::WarpingWithLocation)
+					{
+						if (IsValid(RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation))
+						{
+							if(RootMotionWarpingNotify->bConvertLocationToTranslation)
+							{
+								FVector TargetLocation = RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation.Get()->GetTargetLocation(Character,Ability);
+								float Distance = FVector::Dist(Character->GetActorLocation(),TargetLocation);
+						
+								OverrideWarpingDistances.Add(Distance);
+								OverrideWarpingDirections.Add((TargetLocation - Character->GetActorLocation()).GetSafeNormal());
+							
+							}else
+							{
+								CustomTargetLocations.Add(RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation.Get()->GetTargetLocation(Character,Ability));
+							}
+						}
+					}
+				}
+			}
+	
+			if (bFindTargetActor)
+			{
+				Character->GetWKAbilitySystemComponent()->ProcessRotatorControlToTarget(PlayerTarget);
+			}
+		}
+	
+		OverrideWarpingDistance = OverrideWarpingDistances;
+		MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingDistance, this);
+	
+		OverrideWarpingDirection = OverrideWarpingDirections;
+		MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingDirection, this);
+	
+		CustomTargetLocation = CustomTargetLocations;
+		MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, CustomTargetLocation, this);
+	
+		OverrideWarpingRotation = OverrideWarpingRotations;
+		MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingRotation, this);
+	
+		OverrideWarpingTargetActorParam = OverrideWarpingTargetActorParams;
+		MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingTargetActorParam, this);
+	}
+}
+
+bool UWKAbilityTask_PlayMontageWithRootMotionSource::HandleRootMotionWarping()
+{
+	return false;
+	// TArray<const FAnimNotifyEvent*> MatchTargetNotifyEvents = UWKAnimationFunctionLibrary::GetNotifyEventsFromAnimMontage(MontageToPlay, UWKAnimNotifyState_RootMotionWarping::StaticClass(), SectionIndex);
+	// if (MatchTargetNotifyEvents.IsEmpty())
+	// {
+	// 	return false;
+	// }
+	//
 	// if (AWKCharacterBase* Character = Cast<AWKCharacterBase>(GetAvatarActor()))
 	// {
-	// 	ActorRotator = Character->GetActorRotation();
-	// 	MARK_PROPERTY_DIRTY_FROM_NAME(UWKAbilityTask_PlayMontageWithRootMotionSource, ActorRotator, this);
-	//
-	// 	TArray<float> OverrideWarpingDistances;
-	// 	TArray<FVector_NetQuantize100> OverrideWarpingDirections;
-	// 	TArray<FVector_NetQuantize100> CustomTargetLocations;
-	// 	TArray<float> OverrideWarpingRotations;
-	// 	FWKOverrideWarpingTargetActorParam OverrideWarpingTargetActorParams;
-	// 	
-	// 	TArray<const FAnimNotifyEvent*> MatchTargetNotifyEvents = UDSAnimationFunctionLibrary::GetNotifyEventsFromAnimMontage(MontageToPlay, UDSAnimNotifyState_RootMotionWarping::StaticClass(), SectionIndex);
-	// 	if (!MatchTargetNotifyEvents.IsEmpty())
+	// 	if (AWKPlayerCharacterBase* PlayerCharacter = Cast<AWKPlayerCharacterBase>(Character))
 	// 	{
+	// 		if (PlayerCharacter->bDisableRootMotionWarping)
+	// 		{
+	// 			return false;
+	// 		}
+	// 	}
+	// 	
+	// }
+	//
+	// if (AbilitySystemComponent->AbilityActorInfo->MovementComponent.IsValid())
+	// {
+	// 	// AActor* OwnerActor = AbilitySystemComponent->AbilityActorInfo->OwnerActor.Get();
+	// 	MovementComponent = Cast<UCharacterMovementComponent>(AbilitySystemComponent->AbilityActorInfo->MovementComponent.Get());
+	// 	
+	// 	if (MovementComponent)
+	// 	{
+	// 		MovementComponent->RemoveRootMotionSource(FWKRootMotionSource_RootMotionWarping::RootMotionWarpingForceName);
+	// 		
 	// 		float SectionStart = 0;
 	// 		float SectionEnd = MontageToPlay->GetPlayLength();
 	// 		if (SectionIndex != INDEX_NONE)
 	// 		{
-	// 			MontageToPlay->GetSectionStartAndEndTime(SectionIndex, SectionStart, SectionEnd);
+	// 			UWKAnimationFunctionLibrary::GetMontageContinuousSectionDuration(MontageToPlay,SectionIndex, SectionStart, SectionEnd);
+	// 			//MontageToPlay->GetSectionStartAndEndTime(SectionIndex, SectionStart, SectionEnd);
 	// 		}
 	// 		SectionStart += StartTime;
 	//
-	// 		//只获取一次TargetActor
-	// 		bool bFindTargetActor =  false;
+	// 		if (SectionEnd <= SectionStart || Rate <=0)
+	// 		{
+	// 			DSLog(LogAbilitySystem,Error, TEXT("PlayMontageWithRootMotionSource::HandleRootMotionWarping Montage:%s SectionStart:%.2f SectionEnd:%.2f PlayRate:%.2f"),*MontageToPlay->GetName(),SectionStart,SectionEnd,Rate);
+	// 			return false;
+	// 		}
+	//
+	//
+	// 		//根据优先级规则，把Montage上所有UDSAnimNotifyState_RootMotionWarping通知，排列成一个RootMotionWarpingSouce
+	// 		//整个Montage期间只运行这个一个RootMotionWarping
+	//
+	// 		TArray<FRooMotionWarpingSection_Translation> WarpingSections_Translations;
+	// 		TArray<FRooMotionWarpingSection_Rotation> WarpingSections_Rotations;
+	// 		TArray<FRooMotionWarpingSection_TargetActor> WarpingSections_TargetActors;
+	// 		TArray<FRooMotionWarpingSection_Location> WarpingSections_Locations;
+	//
+	// 		bool LastMaintainVelocityWhenFinish = true;
+	//
+	// 		int OverrideWarpingDistanceIndex = 0;
+	// 		int OverrideWarpingDirectionIndex = 0;
+	// 		int CustomTargetLocationIndex = 0;
+	// 		int OverrideWarpingRotationIndex = 0;
 	// 		
 	// 		for (int i = 0; i < MatchTargetNotifyEvents.Num(); i++)
 	// 		{
-	// 			const FAnimNotifyEvent* Event = MatchTargetNotifyEvents[i];
-	// 			if (Event->GetEndTriggerTime() <= SectionStart || Event->GetTriggerTime() >= SectionEnd)
-	// 				continue;
-	// 			
-	// 			if (const UWKAnimNotifyState_RootMotionWarping* RootMotionWarpingNotify = Cast<UWKAnimNotifyState_RootMotionWarping>(MatchTargetNotifyEvents[i]->NotifyStateClass))
+	// 			if (const UDSAnimNotifyState_RootMotionWarping* RootMotionWarpingNotify = Cast<UDSAnimNotifyState_RootMotionWarping>(MatchTargetNotifyEvents[i]->NotifyStateClass))
 	// 			{
-	// 				if (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithTarget)
+	// 				const FAnimNotifyEvent* Event = MatchTargetNotifyEvents[i];
+	// 				if (Event->GetEndTriggerTime() <= SectionStart || Event->GetTriggerTime() >= SectionEnd)
+	// 					continue;
+	//
+	// 				LastMaintainVelocityWhenFinish = RootMotionWarpingNotify->bMaintainVelocityWhenFinish;
+	// 				bContinueRootMotionWhenMontageStop = RootMotionWarpingNotify->bContinueRootMotionWhenMontageStop;
+	// 				MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, bContinueRootMotionWhenMontageStop, this);
+	// 				
+	// 				const float CorrectionStartTime = FMath::Clamp(Event->GetTriggerTime(), SectionStart, SectionEnd);
+	// 				const float CorrectionEndTime = FMath::Clamp(Event->GetEndTriggerTime(), SectionStart, SectionEnd);
+	//
+	// 				if (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithTranslation)
 	// 				{
-	// 					if (IsValid(RootMotionWarpingNotify->WarpingTargetActor.TargetCatchRule))
+	// 					FRooMotionWarpingSection_Translation Translation = FRooMotionWarpingSection_Translation(CorrectionStartTime,CorrectionEndTime,RootMotionWarpingNotify->AccumulateMode,RootMotionWarpingNotify->bIgnoreZAccumulate,RootMotionWarpingNotify->bMaintainVelocityWhenFinish,RootMotionWarpingNotify->bKeepAnimationRhythm);
+	// 					Translation.WarpingDistance = RootMotionWarpingNotify->WarpingTranslation.WarpingDistance;
+	//
+	// 					if (IsValid(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDistance))
 	// 					{
-	// 						if(!bFindTargetActor)
-	// 						{
-	// 							//应用特异性位移增加锁敌距离
-	// 							UDSTargetCatchRule_PlayerCamera* TargetCatchRule = Cast<UDSTargetCatchRule_PlayerCamera>(RootMotionWarpingNotify->WarpingTargetActor.TargetCatchRule.Get());
-	// 							if(IsValid(TargetCatchRule) && RootMotionWarpingNotify->WarpingTargetActor.bApplySpecificity)
-	// 							{
-	// 								TargetCatchRule->bApplySpecificity = true;
-	// 							}
-	// 							
-	// 							PlayerTarget = RootMotionWarpingNotify->WarpingTargetActor.TargetCatchRule.Get()->TargetSearch(Character,Ability);
-	// 							MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, PlayerTarget, this);
-	// 							
-	// 							bFindTargetActor = true;
-	// 						}
+	// 						Translation.WarpingDistance = OverrideWarpingDistance[OverrideWarpingDistanceIndex++];
 	// 					}
-	// 					if (IsValid(RootMotionWarpingNotify->WarpingTargetActor.OverrideWarpingTargetActor ))
+	//
+	// 					if (IsValid(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDirection))
 	// 					{
-	// 						OverrideWarpingTargetActorParams = RootMotionWarpingNotify->WarpingTargetActor.OverrideWarpingTargetActor.Get()->GetOverrideWarpingTargetParam(Character,Ability);
+	// 						Translation.Direction = OverrideWarpingDirection[OverrideWarpingDirectionIndex++];
 	// 					}
+	// 					
+	// 					WarpingSections_Translations.Add(Translation);
 	// 				}
 	//
 	// 				if (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithRotation)
 	// 				{
+	// 					FRooMotionWarpingSection_Rotation Rotation = FRooMotionWarpingSection_Rotation(CorrectionStartTime,CorrectionEndTime);
+	// 					Rotation.WarpingRotation = RootMotionWarpingNotify->WarpingRotation.WarpingRotation;
+	// 					
 	// 					switch(RootMotionWarpingNotify->WarpingRotation.RotationType)
 	// 					{
+	// 					case EDSRootMotionRotationType::TurnToTarget:
+	// 						Rotation.TargetActor = PlayerTarget;
+	// 						Rotation.RotationAngleSpeed = RootMotionWarpingNotify->WarpingRotation.RotationAngleSpeed;
+	// 						Rotation.RotationOrientation = RootMotionWarpingNotify->WarpingRotation.RotationOrientation;
+	// 						break;
 	// 					case EDSRootMotionRotationType::BaseOnActor:
+	// 						Rotation.WarpingRotation = RootMotionWarpingNotify->WarpingRotation.WarpingRotation;
 	// 						if (IsValid(RootMotionWarpingNotify->WarpingRotation.OverrideWarpingRotation))
 	// 						{
-	// 							OverrideWarpingRotations.Add(RootMotionWarpingNotify->WarpingRotation.OverrideWarpingRotation.Get()->GetOverrideWarpingRotation(Character,Ability));
-	// 						}
-	// 						break;
-	// 					case EDSRootMotionRotationType::TurnToTarget:
-	// 						if (IsValid(RootMotionWarpingNotify->WarpingRotation.TargetCatchRule))
-	// 						{
-	// 							if(!bFindTargetActor)
-	// 							{
-	// 								PlayerTarget = RootMotionWarpingNotify->WarpingRotation.TargetCatchRule.Get()->TargetSearch(Character,Ability);
-	// 								MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, PlayerTarget, this);
-	//
-	// 								bFindTargetActor = true;
-	// 							}
+	// 							Rotation.WarpingRotation = OverrideWarpingRotation[OverrideWarpingRotationIndex++];
 	// 						}
 	// 						break;
 	// 					case EDSRootMotionRotationType::BaseOnController:
-	// 						ControlRotator =  Character->GetControlRotation();
-	// 						MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, ControlRotator, this);
-	//
+	// 						if (GetAvatarActor())
+	// 						{
+	// 							Rotation.WarpingRotation = FRotator::NormalizeAxis(ControlRotator.Yaw - GetAvatarActor()->GetActorRotation().Yaw);
+	// 						}
 	// 						break;
 	// 					case EDSRootMotionRotationType::BaseOnInput:
+	// 						if (GetAvatarActor())
 	// 						{
-	// 							ControlRotator =  Character->GetControlRotation();
-	// 							MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, ControlRotator, this);
-	// 							ADSCharacter* PlayerCharacter = Cast<ADSCharacter>(Character);
-	// 							CharacterMoveInput = FVector(PlayerCharacter->GetMoveInput().X,PlayerCharacter->GetMoveInput().Y,0);
-	// 							MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, CharacterMoveInput, this);
+	// 							Rotation.WarpingRotation = FRotator::NormalizeAxis(ControlRotator.Yaw - GetAvatarActor()->GetActorRotation().Yaw +UKismetMathLibrary::MakeRotFromX(CharacterMoveInput).Yaw);
 	// 						}
 	// 						break;
 	// 					default:
 	// 						break;
 	// 					}
-	// 				}
-	//
-	// 				if (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithTranslation)
-	// 				{
-	// 					if (IsValid(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDistance ))
-	// 					{
-	// 						OverrideWarpingDistances.Add(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDistance.Get()->GetOverrideWarpingDistance(Character,Ability));
-	// 					}
-	//
-	// 					if (IsValid(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDirection))
-	// 					{
-	// 						OverrideWarpingDirections.Add(RootMotionWarpingNotify->WarpingTranslation.OverrideWarpingDirection.Get()->GetOverrideWarpingDirection(Character,Ability));
-	// 					}
+	// 					
+	// 					WarpingSections_Rotations.Add(Rotation);
 	// 				}
 	//
 	// 				if (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithLocation)
 	// 				{
-	// 					if (IsValid(RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation))
+	// 					if(RootMotionWarpingNotify->bConvertLocationToTranslation)
 	// 					{
-	// 						if(RootMotionWarpingNotify->bConvertLocationToTranslation)
+	// 						FRooMotionWarpingSection_Translation Translation = FRooMotionWarpingSection_Translation(CorrectionStartTime,CorrectionEndTime,RootMotionWarpingNotify->AccumulateMode,RootMotionWarpingNotify->bIgnoreZAccumulate,RootMotionWarpingNotify->bMaintainVelocityWhenFinish,RootMotionWarpingNotify->bKeepAnimationRhythm);
+	// 						if (IsValid(RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation))
 	// 						{
-	// 							FVector TargetLocation = RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation.Get()->GetTargetLocation(Character,Ability);
-	// 							float Distance = FVector::Dist(Character->GetActorLocation(),TargetLocation);
+	// 							Translation.WarpingDistance = OverrideWarpingDistance[OverrideWarpingDistanceIndex++];
+	// 							Translation.Direction = OverrideWarpingDirection[OverrideWarpingDirectionIndex++];
+	// 						}
+	// 						WarpingSections_Translations.Add(Translation);
+	// 					}else{
+	// 						FRooMotionWarpingSection_Location Location = FRooMotionWarpingSection_Location(CorrectionStartTime,CorrectionEndTime,RootMotionWarpingNotify->AccumulateMode,RootMotionWarpingNotify->bIgnoreZAccumulate,RootMotionWarpingNotify->bMaintainVelocityWhenFinish,RootMotionWarpingNotify->bKeepAnimationRhythm);
+	//
+	// 						if (IsValid(RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation))
+	// 						{
+	// 							Location.TargetLocation = CustomTargetLocation[CustomTargetLocationIndex++];
+	// 						}
+	// 						Location.ZTrajectory = RootMotionWarpingNotify->ZTrajectory;
 	// 					
-	// 							OverrideWarpingDistances.Add(Distance);
-	// 							OverrideWarpingDirections.Add((TargetLocation - Character->GetActorLocation()).GetSafeNormal());
-	// 						
-	// 						}else
+	// 						WarpingSections_Locations.Add(Location);						
+	// 					}
+	// 				}
+	//
+	// 				if (RootMotionWarpingNotify->MotionWarpingType == EDSRootMotionWarpingType::WarpingWithTarget)
+	// 				{
+	// 					if (IsValid(RootMotionWarpingNotify->WarpingTargetActor.OverrideWarpingTargetActor ))
+	// 					{
+	// 						if(UDSAnimNotifyState_RootMotionWarping* ModifyMotionWarpingNotify = const_cast<UDSAnimNotifyState_RootMotionWarping*>(RootMotionWarpingNotify))
 	// 						{
-	// 							CustomTargetLocations.Add(RootMotionWarpingNotify->WarpingLocation.CustomTargetLocation.Get()->GetTargetLocation(Character,Ability));
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.bUpdateTargetPosition = OverrideWarpingTargetActorParam.bUpdateTargetPosition;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.bApplySpecificity = OverrideWarpingTargetActorParam.bApplySpecificity;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.MaxDistance = OverrideWarpingTargetActorParam.MaxDistance;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.WarpingDistanceIfTargetNotFound = OverrideWarpingTargetActorParam.WarpingDistanceIfTargetNotFound;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.ChasingSpeed = OverrideWarpingTargetActorParam.ChasingSpeed;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.RotationToAbort = OverrideWarpingTargetActorParam.RotationToAbort;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.RotationRate = OverrideWarpingTargetActorParam.RotationRate;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.RotationMax = OverrideWarpingTargetActorParam.RotationMax;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.RotationOrientation = OverrideWarpingTargetActorParam.RotationOrientation;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.LocationOffset = OverrideWarpingTargetActorParam.LocationOffset;
+	// 							ModifyMotionWarpingNotify->WarpingTargetActor.RotationOffset = OverrideWarpingTargetActorParam.RotationOffset;
+	// 						}
+	// 					}
+	// 					
+	// 					FRooMotionWarpingSection_TargetActor TargetActor = FRooMotionWarpingSection_TargetActor(CorrectionStartTime,CorrectionEndTime,RootMotionWarpingNotify->AccumulateMode,RootMotionWarpingNotify->bIgnoreZAccumulate,RootMotionWarpingNotify->bMaintainVelocityWhenFinish,RootMotionWarpingNotify->bKeepAnimationRhythm);
+	// 					TargetActor.TargetActor = PlayerTarget;
+	// 					TargetActor.bUpdateTargetPosition = RootMotionWarpingNotify->WarpingTargetActor.bUpdateTargetPosition;
+	// 					TargetActor.ChasingSpeed = RootMotionWarpingNotify->WarpingTargetActor.ChasingSpeed;
+	// 					TargetActor.LocationOffset = RootMotionWarpingNotify->WarpingTargetActor.LocationOffset;
+	//
+	// 					//特异性天赋追踪距离增加
+	// 					float FinalMaxDistance = RootMotionWarpingNotify->WarpingTargetActor.MaxDistance;
+	// 					//锁敌角度
+	// 					float RotationToAbort = RootMotionWarpingNotify->WarpingTargetActor.RotationToAbort;
+	// 					FDSCreature AvatarCreature(GetAvatarCreature());
+	// 					if (IsValidCreature(AvatarCreature))
+	// 					{
+	// 						if (AvatarCreature->GetAttributeSet()->GetTalent_WrapingSpecificityDistance() > 0 && RootMotionWarpingNotify->WarpingTargetActor.bApplySpecificity)
+	// 						{
+	// 							FinalMaxDistance += AvatarCreature->GetAttributeSet()->GetTalent_WrapingSpecificityDistance();
+	// 						}
+	//
+	// 						FinalMaxDistance += AvatarCreature->GetAttributeSet()->GetWrapingDistanceAdditive();
+	// 						RotationToAbort += AvatarCreature->GetAttributeSet()->GetWrapingAngleAdditive();
+	// 					}
+	// 					TargetActor.MaxDistance = FinalMaxDistance;
+	// 					TargetActor.RotationToAbort = RotationToAbort;
+	// 					
+	// 					TargetActor.WarpingDistanceIfTargetNotFound = RootMotionWarpingNotify->WarpingTargetActor.WarpingDistanceIfTargetNotFound;
+	// 					TargetActor.RotationOffset = RootMotionWarpingNotify->WarpingTargetActor.RotationOffset;
+	// 					TargetActor.RotationRate = RootMotionWarpingNotify->WarpingTargetActor.RotationRate;
+	// 					TargetActor.RotationMax = RootMotionWarpingNotify->WarpingTargetActor.RotationMax;
+	// 					TargetActor.RotationOrientation = RootMotionWarpingNotify->WarpingTargetActor.RotationOrientation;
+	// 					TargetActor.ZTrajectory = RootMotionWarpingNotify->ZTrajectory;
+	// 			
+	// 					WarpingSections_TargetActors.Add(TargetActor);
+	//
+	// 					//主控端目标预测功能
+	// 					if (IsLocallyControlled())
+	// 					{
+	// 						if (IsValidCreature(AvatarCreature))
+	// 						{
+	// 							if (!AvatarCreature->K2_GetDSAbilitySystemComponent_Implementation()->bUsingMutableDetectRule)
+	// 							{
+	// 								//暂时只取第一段
+	// 								AvatarCreature->K2_GetDSAbilitySystemComponent_Implementation()->SetMutableDetectRule(RootMotionWarpingNotify->WarpingTargetActor,this);
+	// 							}
 	// 						}
 	// 					}
 	// 				}
 	// 			}
 	// 		}
 	//
-	// 		if (bFindTargetActor)
+	// 		//按照优先级对有重合的WarpingSection进行裁剪
+	// 		ArrangeNotifySection(WarpingSections_Translations,WarpingSections_Rotations,WarpingSections_TargetActors,WarpingSections_Locations);
+	// 		
+	// 		
+	// 		if (WarpingSections_Translations.IsEmpty()
+	// 			&&WarpingSections_Rotations.IsEmpty()
+	// 			&&WarpingSections_TargetActors.IsEmpty()
+	// 			&&WarpingSections_Locations.IsEmpty())
 	// 		{
-	// 			Character->GetWKAbilitySystemComponent()->ProcessRotatorControlToTarget(PlayerTarget);
+	// 			return true;
+	// 		}
+	//
+	// 		TSharedPtr<FDSRootMotionSource_RootMotionWarping> RMSource = MakeShared<FDSRootMotionSource_RootMotionWarping>();
+	// 		RMSource->InstanceName = FDSRootMotionSource_RootMotionWarping::RootMotionWarpingForceName;
+	// 		RMSource->WarpingSections_Translation = WarpingSections_Translations;
+	// 		RMSource->WarpingSections_Rotation = WarpingSections_Rotations;
+	// 		RMSource->WarpingSections_TargetActor = WarpingSections_TargetActors;
+	// 		RMSource->WarpingSections_Location = WarpingSections_Locations;
+	// 		RMSource->Montage = MontageToPlay;
+	// 		RMSource->AnimationStartPos = SectionStart;
+	// 		RMSource->AnimationEndPos = SectionEnd;
+	// 		RMSource->Duration = (SectionEnd - SectionStart)/(Rate*MontageToPlay->RateScale);
+	// 		//RMSource->PlayRate = (Rate*MontageToPlay->RateScale);
+	// 		//整段RootMotionSource结束之后的速度，根据最后一段配置决定
+	// 		if (LastMaintainVelocityWhenFinish)
+	// 		{
+	// 			RMSource->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::MaintainLastRootMotionVelocity;
+	// 		}
+	// 		else
+	// 		{
+	// 			RMSource->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::SetVelocity;
+	// 		}
+	// 		
+	//
+	// 		RootMotionSourceID = MovementComponent->ApplyRootMotionSource(RMSource);
+	//
+	//
+	// 		if (ACharacter* Character = Cast<ACharacter>(GetAvatarActor()))
+	// 		{
+	// 			//掉线后，会因为ServerData->CurrentClientTimeStamp的时间戳停滞导致FRootMotionSourceGroup::PrepareRootMotion里把SimulationTime设为0而没有位移
+	// 			if(Character->IsNetMode(NM_DedicatedServer)&& Character->IsPlayerControlled() && Character->IsReplicatingMovement()
+	// 				&& Character->GetMesh() && Character->GetMesh()->bOnlyAllowAutonomousTickPose == false)
+	// 			{
+	// 				TSharedPtr<FRootMotionSource> RootMotionSource = MovementComponent->GetRootMotionSourceByID(RootMotionSourceID);
+	// 				//设置为0跳过验证，这个改法和引擎逻辑偶尔，后续版本需要持续关注，避免失效甚至造成其他后果
+	// 				RootMotionSource->StartTime = 0.f;
+	// 			}
 	// 		}
 	// 	}
-	//
-	// 	OverrideWarpingDistance = OverrideWarpingDistances;
-	// 	MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingDistance, this);
-	//
-	// 	OverrideWarpingDirection = OverrideWarpingDirections;
-	// 	MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingDirection, this);
-	//
-	// 	CustomTargetLocation = CustomTargetLocations;
-	// 	MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, CustomTargetLocation, this);
-	//
-	// 	OverrideWarpingRotation = OverrideWarpingRotations;
-	// 	MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingRotation, this);
-	//
-	// 	OverrideWarpingTargetActorParam = OverrideWarpingTargetActorParams;
-	// 	MARK_PROPERTY_DIRTY_FROM_NAME(UDSAbilityTask_PlayMontageWithRootMotionSource, OverrideWarpingTargetActorParam, this);
 	// }
-}
-
-bool UWKAbilityTask_PlayMontageWithRootMotionSource::HandleRootMotionWarping()
-{
-	return true;
+	// return true;
 }
 
 void UWKAbilityTask_PlayMontageWithRootMotionSource::ArrangeNotifySection(
@@ -490,4 +764,61 @@ void UWKAbilityTask_PlayMontageWithRootMotionSource::ArrangeNotifySection(
 	TArray<FRootMotionWarpingSection_TargetActor>& WarpingSections_TargetActors,
 	TArray<FRootMotionWarpingSection_Location>& WarpingSections_Locations)
 {
+	// //旋转和位移两个类型,旋转类型可以和除TargetActor之外的所有类型一起使用
+	// SortNotifySection(WarpingSections_Rotations);
+	//
+	// TArray<FRooMotionWarpingSection*> CombineLocations;
+	//
+	// for (FRooMotionWarpingSection_Translation& Item:WarpingSections_Translations)
+	// {
+	// 	CombineLocations.Add(&Item);
+	// }
+	//
+	// for (FRooMotionWarpingSection_TargetActor& Item:WarpingSections_TargetActors)
+	// {
+	// 	CombineLocations.Add(&Item);
+	// }
+	//
+	// for (FRooMotionWarpingSection_Location& Item:WarpingSections_Locations)
+	// {
+	// 	CombineLocations.Add(&Item);
+	// }
+	//
+	//
+	// CombineLocations.Sort([](const FRooMotionWarpingSection& Section1, const FRooMotionWarpingSection& Section2)
+	// {
+	// 	return Section1.StartTime < Section2.StartTime;
+	// });
+	//
+	// SortNotifySectionPointer(CombineLocations);
+	//
+	// TArray<FRooMotionWarpingSection_Translation> NewTranslations;
+	// TArray<FRooMotionWarpingSection_TargetActor> NewTargetActors;
+	// TArray<FRooMotionWarpingSection_Location> NewLocations;
+	//
+	// for (FRooMotionWarpingSection* Section:CombineLocations)
+	// {
+	// 	if (Section->GetStruct() ==  FRooMotionWarpingSection_Translation::StaticStruct())
+	// 	{
+	// 		NewTranslations.Add(static_cast<FRooMotionWarpingSection_Translation&>(*Section));
+	// 	}
+	// 	else if (Section->GetStruct() ==  FRooMotionWarpingSection_TargetActor::StaticStruct())
+	// 	{
+	// 		NewTargetActors.Add(static_cast<FRooMotionWarpingSection_TargetActor&>(*Section));
+	// 	}
+	// 	else if (Section->GetStruct() ==  FRooMotionWarpingSection_Location::StaticStruct())
+	// 	{
+	// 		NewLocations.Add(static_cast<FRooMotionWarpingSection_Location&>(*Section));
+	// 	}
+	// }
+	//
+	// WarpingSections_Translations = NewTranslations;
+	// WarpingSections_TargetActors = NewTargetActors;
+	// WarpingSections_Locations = NewLocations;
+	//
+	// //有TargetActor时，不能有Rotation
+	// for(const FRooMotionWarpingSection_TargetActor& TargetActorSection :NewTargetActors)
+	// {
+	// 	CutNotifySection(TargetActorSection,WarpingSections_Rotations);
+	// }
 }

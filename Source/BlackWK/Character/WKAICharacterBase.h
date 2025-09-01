@@ -8,6 +8,7 @@
 #include "BlackWK/AI/WKLockableInterface.h"
 #include "WKAICharacterBase.generated.h"
 
+class UBlackboardComponent;
 class UWidgetComponent;
 struct FOnAttributeChangeData;
 class UWKFloatingStatusBarWidget;
@@ -21,6 +22,11 @@ public:
 	AWKAICharacterBase(const FObjectInitializer& ObjectInitializer);
 	virtual void BeginPlay() override;
 
+	/// AWKCharacterBase
+	virtual bool IsPlayerCharacter() override;
+	virtual AWKCharacterBase* GetCurrentAttackLockTarget() const override;
+	/// ~AWKCharacterBase
+
 	/// IWKAIStateInterface
 	virtual bool HasSawEnemyTarget() override;
 	/// ~IWKAIStateInterface
@@ -30,4 +36,6 @@ public:
 	/// ~IWKLockableInterface
 	
 protected:
+	UPROPERTY()
+	TObjectPtr<UBlackboardComponent> BlackboardComponent;
 };

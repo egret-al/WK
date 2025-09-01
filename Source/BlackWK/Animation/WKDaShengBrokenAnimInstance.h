@@ -35,6 +35,9 @@ protected:
 	void UpdateMovement();
 	void UpdateForward();
 
+	UFUNCTION(BlueprintPure)
+	FVector GetTargetLocationFromBlackboard() const;
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "References")
 	TWeakObjectPtr<AWKAIDaShengCharacter> OwnerDaSheng;

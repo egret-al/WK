@@ -105,6 +105,11 @@ bool AWKCharacterBase::HasAllMatchingGameplayTags(const FGameplayTagContainer& T
 	return false;
 }
 
+UWKSkeletalMeshComponent* AWKCharacterBase::GetWKSkeletalMeshComponent() const
+{
+	return Cast<UWKSkeletalMeshComponent>(GetMesh());
+}
+
 UAbilitySystemComponent* AWKCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent.Get();

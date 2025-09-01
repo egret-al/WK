@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "WKCharacterBase.generated.h"
 
+class UWKSkeletalMeshComponent;
 class UWKPawnData;
 class UGameplayEffect;
 class UWKGameplayAbility;
@@ -40,6 +41,9 @@ public:
 	virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 	virtual bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 	/// ~IGameplayTagAssetInterface
+
+	UFUNCTION(BlueprintPure)
+	UWKSkeletalMeshComponent* GetWKSkeletalMeshComponent() const;
 	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UWKAbilitySystemComponent* GetWKAbilitySystemComponent() const;
@@ -52,6 +56,14 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetMeleeComboIndex(int32 Index);
+
+	// 由AI或者玩家重写
+	UFUNCTION(BlueprintPure)
+	virtual bool IsPlayerCharacter() { return true; }
+	
+	// 获取当前的目标，如果是AI，则从行为树的黑板中获取，如果是玩家，则获取当前锁定目标，如果目标，返回空
+	UFUNCTION(BlueprintPure)
+	virtual AWKCharacterBase* GetCurrentAttackLockTarget() const { return nullptr; }
 
 protected:
 	virtual void OnAbilitySystemInitialized();

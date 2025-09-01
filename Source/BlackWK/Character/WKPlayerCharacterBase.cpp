@@ -175,6 +175,26 @@ FVector AWKPlayerCharacterBase::GetStartingCameraBoomLocation()
 	return StartingCameraBoomLocation;
 }
 
+bool AWKPlayerCharacterBase::IsPlayerCharacter()
+{
+	return true;
+}
+
+AWKCharacterBase* AWKPlayerCharacterBase::GetCurrentAttackLockTarget() const
+{
+	return LockTarget;
+}
+
+FVector2d AWKPlayerCharacterBase::GetMoveInput() const
+{
+	return UWKPlayerCharacterInputComponent::FindPlayerCharacterInputComponent(this)->MoveInput;
+}
+
+AWKPlayerController* AWKPlayerCharacterBase::GetPlayerController() const
+{
+	return Cast<AWKPlayerController>(GetController());
+}
+
 void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
 {
 	if (RotationMode == EWKRotationMode::LookingDirection)

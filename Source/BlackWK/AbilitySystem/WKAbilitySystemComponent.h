@@ -34,6 +34,7 @@ class BLACKWK_API UWKAbilitySystemComponent : public UAbilitySystemComponent
 
 public:
 	UWKAbilitySystemComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 	virtual void ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags) override;
 
@@ -95,6 +96,9 @@ public:
 	void ClearAbilityReplicatedDataCacheEx(FGameplayAbilitySpecHandle Handle, const FGuid& Guid);
 	void ClearAbilityReplicatedDataCacheEx(FGameplayAbilitySpecHandle Handle);
 
+	void ProcessRotatorControlToTarget(AActor* Target);
+	void UpdateRotatorControlToTarget(float DeltaTime);
+	
 protected:
 	/** 尝试在生成时就去激活可以激活的GA */
 	void TryActivateAbilitiesOnSpawn();
@@ -135,4 +139,20 @@ private:
 	FWKGameplayAbilityPriorityInfo CurrentPriorityInfo;
 
 	TMap<int32, TArray<FAbilityInputListenerHandle>> InputListeners;
+
+public:
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "WarpingTargetDetect")
+	bool RotatorControlToTarget = false;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "WarpingTargetDetect", meta = (EditCondition = "RotatorControlToTarget", EditConditionHides))
+	float RotatorDuration = 0.5f;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "WarpingTargetDetect", meta = (EditCondition = "RotatorControlToTarget", EditConditionHides))
+	float InterpSpeed = 0.5f;
+
+private:
+	UPROPERTY(Transient)
+	TWeakObjectPtr<AActor> TurnToTarget;
+
+	float RotatorControlToTargetTimer;
 };
