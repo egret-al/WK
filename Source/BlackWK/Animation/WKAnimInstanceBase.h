@@ -7,6 +7,7 @@
 #include "BlackWK/Character/WKCharacterTypes.h"
 #include "WKAnimInstanceBase.generated.h"
 
+class UWKAbilitySystemComponent;
 class UAbilitySystemComponent;
 class AWKCharacterBase;
 /**
@@ -29,6 +30,9 @@ protected:
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<AWKCharacterBase> OwnerWK;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UWKAbilitySystemComponent> OwnerASC;
 
 	UPROPERTY(BlueprintReadOnly)
 	FVector Velocity;

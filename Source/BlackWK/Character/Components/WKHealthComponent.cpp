@@ -4,6 +4,7 @@
 #include "WKHealthComponent.h"
 
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
+#include "BlackWK/AbilitySystem/AttributeSets/WKCombatSet.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKHealthSet.h"
 
 UWKHealthComponent::UWKHealthComponent(const FObjectInitializer& ObjectInitializer)
@@ -15,6 +16,7 @@ UWKHealthComponent::UWKHealthComponent(const FObjectInitializer& ObjectInitializ
 
 	AbilitySystemComponent = nullptr;
 	HealthSet = nullptr;
+	CombatSet = nullptr;
 }
 
 UWKHealthComponent* UWKHealthComponent::FindHealthComponent(const AActor* InActor)
@@ -41,15 +43,18 @@ void UWKHealthComponent::InitializeWithAbilitySystem(UWKAbilitySystemComponent* 
 	}
 
 	HealthSet = AbilitySystemComponent->GetSet<UWKHealthSet>();
-	if (!HealthSet)
-	{
-		// UE_LOG(LogLyra, Error, TEXT("LyraHealthComponent: Cannot initialize health component for owner [%s] with NULL health set on the ability system."), *GetNameSafe(Owner));
-		return;
-	}
-
+	CombatSet = AbilitySystemComponent->GetSet<UWKCombatSet>();
+	
 	HealthSet->OnHealthChanged.AddUObject(this, &ThisClass::HandleHealthChanged);
 	HealthSet->OnMaxHealthChanged.AddUObject(this, &ThisClass::HandleMaxHealthChanged);
 	HealthSet->OnOutOfHealth.AddUObject(this, &ThisClass::HandleOutOfHealth);
+
+	CombatSet->OnManaChanged.AddUObject(this, &ThisClass::HandleManaChanged);
+	CombatSet->OnMaxManaChanged.AddUObject(this, &ThisClass::HandleMaxManaChanged);
+	CombatSet->OnStaminaChanged.AddUObject(this, &ThisClass::HandleStaminaChanged);
+	CombatSet->OnMaxStaminaChanged.AddUObject(this, &ThisClass::HandleMaxStaminaChanged);
+	CombatSet->OnResilienceChanged.AddUObject(this, &ThisClass::HandleResilienceChanged);
+	CombatSet->OnMaxResilienceChanged.AddUObject(this, &ThisClass::HandleMaxResilienceChanged);
 
 	AbilitySystemComponent->SetNumericAttributeBase(UWKHealthSet::GetHealthAttribute(), HealthSet->GetMaxHealth());
 
@@ -80,6 +85,36 @@ float UWKHealthComponent::GetMaxHealth() const
 	return HealthSet ? HealthSet->GetMaxHealth() : 0.0f;
 }
 
+float UWKHealthComponent::GetStamina() const
+{
+	return CombatSet ? CombatSet->GetStamina() : 0.f;
+}
+
+float UWKHealthComponent::GetMaxStamina() const
+{
+	return CombatSet ? CombatSet->GetMaxStamina() : 0.f;
+}
+
+float UWKHealthComponent::GetResilience() const
+{
+	return CombatSet ? CombatSet->GetResilience() : 0.f;
+}
+
+float UWKHealthComponent::GetMaxResilience() const
+{
+	return CombatSet ? CombatSet->GetMaxResilience() : 0.f;
+}
+
+float UWKHealthComponent::GetMana() const
+{
+	return CombatSet ? CombatSet->GetMana() : 0.f;
+}
+
+float UWKHealthComponent::GetMaxMana() const
+{
+	return CombatSet ? CombatSet->GetMaxMana() : 0.f;
+}
+
 float UWKHealthComponent::GetHealthNormalized() const
 {
 	if (HealthSet)
@@ -101,6 +136,36 @@ void UWKHealthComponent::HandleHealthChanged(AActor* DamageInstigator, AActor* D
 void UWKHealthComponent::HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
 	OnMaxHealthChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleManaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnManaChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleMaxManaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnMaxManaChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleResilienceChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnResilienceChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleMaxResilienceChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnMaxResilienceChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleStaminaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnStaminaChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleMaxStaminaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnMaxStaminaChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
 }
 
 void UWKHealthComponent::HandleOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)

@@ -93,6 +93,17 @@ void UWKDaShengBrokenAnimInstance::UpdateMovement()
 		return;
 	}
 
+	// 如果AI被阻止移动了，就不更新
+	if (OwnerASC)
+	{
+		if (OwnerASC->HasMatchingGameplayTag(WKGameplayTags::Gameplay_State_Input_BlockMove))
+		{
+			// 快速地停止移动
+			Forward = UKismetMathLibrary::Lerp(Forward, 0.f, GetWorld()->GetDeltaSeconds() * DistanceToStopInterpSpeed * 10);
+			return;
+		}
+	}
+	
 	FVector Direction = GetTargetLocationFromBlackboard() - OwnerWK->GetActorLocation();
 	FVector LocalDirection = UKismetMathLibrary::LessLess_VectorRotator(Direction, OwnerWK->GetActorRotation());
 	TurnAngle = UKismetMathLibrary::DegAtan2(LocalDirection.Y, LocalDirection.X);

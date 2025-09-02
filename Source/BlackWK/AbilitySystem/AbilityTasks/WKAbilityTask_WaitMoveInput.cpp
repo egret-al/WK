@@ -39,8 +39,6 @@ void UWKAbilityTask_WaitMoveInput::TickTask(float DeltaTime)
 	if (IsValid(InputComponent))
 	{
 		FVector2D MoveInput = InputComponent->MoveInput;
-		FString Msg = FString::Printf(TEXT("MoveInput=(%f, %f)   %f"), MoveInput.X, MoveInput.Y, MoveInput.SquaredLength());
-		GEngine->AddOnScreenDebugMessage(1, 0.2f, FColor::Green, Msg);
 		if (MoveInput.SquaredLength() > 0.1f)
 		{
 			// 有移动输入

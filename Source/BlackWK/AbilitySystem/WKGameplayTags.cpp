@@ -14,10 +14,9 @@ namespace WKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_State_Input_BlockMove, "Gameplay.State.Input.BlockMove", "阻塞输入移动");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_Damage_Hit, "Gameplay.Message.Damage.Hit", "命中敌人时发送的事件");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_ShouldMove, "Gameplay.Message.ShouldMove", "GA播放动画的过程中，执行到了可提前结束GA的移动指令");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_WuKong_BeHit, "Gameplay.Event.WuKong.BeHit", "悟空受击GA，通过GameplayEvent激活");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_DaSheng_BeHit, "Gameplay.Event.DaSheng.BeHit", "大圣受击GA，通过GameplayEvent激活");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_BeHit, "Gameplay.Event.BeHit", "受击GA，通过GameplayEvent激活");
 	
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill01, "Ability.DaSheng.Skill01", "大圣激活技能1的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill01, "Ability.DaSheng.Skill.Skill01", "大圣激活技能1的Tag");
 
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString)
 	{

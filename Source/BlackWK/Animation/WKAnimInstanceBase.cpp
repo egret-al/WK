@@ -3,10 +3,12 @@
 
 #include "WKAnimInstanceBase.h"
 
+#include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/Character/WKCharacterBase.h"
 
 void UWKAnimInstanceBase::InitializeWithAbilitySystem(UAbilitySystemComponent* ASC)
 {
+	OwnerASC = Cast<UWKAbilitySystemComponent>(ASC);
 }
 
 void UWKAnimInstanceBase::NativeInitializeAnimation()

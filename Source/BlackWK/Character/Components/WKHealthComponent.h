@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "WKHealthComponent.generated.h"
 
+class UWKCombatSet;
 struct FGameplayEffectSpec;
 class UWKHealthComponent;
 
@@ -32,13 +33,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void UninitializeFromAbilitySystem();
 
-	UFUNCTION(BlueprintCallable, Category = "Health")
+	UFUNCTION(BlueprintPure, Category = "Health")
 	float GetHealth() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Health")
+	UFUNCTION(BlueprintPure, Category = "Health")
 	float GetMaxHealth() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Health")
+	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetStamina() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetMaxStamina() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetResilience() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetMaxResilience() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetMana() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetMaxMana() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
 	float GetHealthNormalized() const;
 
 public:
@@ -48,9 +67,33 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FWKHealth_AttributeChanged OnMaxHealthChanged;
 
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnManaChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnMaxManaChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnResilienceChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnMaxResilienceChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnStaminaChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnMaxStaminaChanged;
+
 protected:
 	virtual void HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleManaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleMaxManaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleResilienceChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleMaxResilienceChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleStaminaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleMaxStaminaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 
 protected:
@@ -59,4 +102,7 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<const UWKHealthSet> HealthSet;
+
+	UPROPERTY()
+	TObjectPtr<const UWKCombatSet> CombatSet;
 };

@@ -118,7 +118,7 @@ void UWKHealthSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDat
 		OnHealthChanged.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HealthBeforeAttributeChange, GetHealth());
 	}
 
-	if ((GetHealth() <= 0.0f) && !bOutOfHealth)
+	if (GetHealth() <= 0.0f && !bOutOfHealth)
 	{
 		OnOutOfHealth.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HealthBeforeAttributeChange, GetHealth());
 	}
