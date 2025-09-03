@@ -26,6 +26,9 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+
+	virtual void InitializeAbilityClient();
 
 	USpringArmComponent* GetCameraBoom() const;
 	UCameraComponent* GetFollowCamera() const;

@@ -27,6 +27,7 @@ class BLACKWK_API AWKCharacterBase : public ACharacter, public IAbilitySystemInt
 public:
 	AWKCharacterBase(const FObjectInitializer& ObjectInitializer);
 	virtual void BeginPlay() override;
+	virtual void OnPlayerStateChanged(APlayerState* NewPlayerState, APlayerState* OldPlayerState) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;

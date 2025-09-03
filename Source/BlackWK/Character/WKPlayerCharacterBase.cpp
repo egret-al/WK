@@ -52,9 +52,9 @@ void AWKPlayerCharacterBase::BeginPlay()
 	StartingCameraBoomArmLength = CameraBoom->TargetArmLength;
 	StartingCameraBoomLocation = CameraBoom->GetRelativeLocation();
 
-	if (UWKPlayerCharacterInputComponent* WKInputComponent = UWKPlayerCharacterInputComponent::FindPlayerCharacterInputComponent(this))
+	if (GetNetMode() == NM_Standalone)
 	{
-		WKInputComponent->InitializePlayerInput(GetController()->InputComponent);
+		InitializeAbilityClient();
 	}
 }
 
@@ -137,21 +137,40 @@ void AWKPlayerCharacterBase::Tick(float DeltaSeconds)
 void AWKPlayerCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
+	
 	AWKPlayerState* PS = GetPlayerState<AWKPlayerState>();
 	if (PS)
 	{
 		AbilitySystemComponent = Cast<UWKAbilitySystemComponent>(PS->GetAbilitySystemComponent());
 		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
-
-		AWKPlayerController* PC = Cast<AWKPlayerController>(GetController());
-		if (PC)
-		{
-			PC->CreateHUD();
-		}
-
-
 		OnAbilitySystemInitialized();
+	}
+}
+
+void AWKPlayerCharacterBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	InitializeAbilityClient();
+}
+
+void AWKPlayerCharacterBase::InitializeAbilityClient()
+{
+	if (UWKPlayerCharacterInputComponent* WKInputComponent = UWKPlayerCharacterInputComponent::FindPlayerCharacterInputComponent(this))
+	{
+		WKInputComponent->InitializePlayerInput(GetController()->InputComponent);
+	}
+
+	AWKPlayerState* PS = GetPlayerState<AWKPlayerState>();
+	if (PS)
+	{
+		AbilitySystemComponent = Cast<UWKAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+	}
+
+	AWKPlayerController* PC = Cast<AWKPlayerController>(GetController());
+	if (PC)
+	{
+		PC->CreateHUD();
 	}
 }
 

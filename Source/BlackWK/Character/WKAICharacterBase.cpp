@@ -24,16 +24,19 @@ void AWKAICharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AWKPlayerState* PS = Cast<AWKPlayerState>(GetPlayerState());
-	check(PS);
-	AbilitySystemComponent = PS->GetWKAbilitySystemComponent();
+	if (HasAuthority())
+	{
+		AWKPlayerState* PS = Cast<AWKPlayerState>(GetPlayerState());
+		check(PS);
+		AbilitySystemComponent = PS->GetWKAbilitySystemComponent();
 
-	AbilitySystemComponent->InitAbilityActorInfo(GetPlayerState(), this);
-	OnAbilitySystemInitialized();
+		AbilitySystemComponent->InitAbilityActorInfo(GetPlayerState(), this);
+		OnAbilitySystemInitialized();
 
-	AAIController* AIController = Cast<AAIController>(GetController());
-	check(AIController);
-	BlackboardComponent = AIController->GetBlackboardComponent();
+		AAIController* AIController = Cast<AAIController>(GetController());
+		check(AIController);
+		BlackboardComponent = AIController->GetBlackboardComponent();	
+	}
 }
 
 bool AWKAICharacterBase::IsPlayerCharacter()

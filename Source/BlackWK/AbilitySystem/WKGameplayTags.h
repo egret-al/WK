@@ -12,12 +12,14 @@ namespace WKGameplayTags
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Invincible);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_IronBody);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Dodging);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Input_BlockMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_ShouldMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_BeHit);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill01);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_Dodge);
 	
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString = false);
 }

@@ -39,7 +39,8 @@ UENUM(BlueprintType)
 enum class EWKGameplayAbilityInputBinds : uint8
 {
 	None,
-	MeleeCombo		UMETA(DisplayName = "MeleeCombo")
+	MeleeCombo		UMETA(DisplayName = "MeleeCombo"),
+	Dodge			UMETA(DisplayName = "Dodge"),
 };
 
 /**

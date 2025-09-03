@@ -68,9 +68,9 @@ void AWKPlayerState::SetPawnData(const UWKPawnData* InPawnData)
 	{
 		return;
 	}
-
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PawnData, this);
+	
 	PawnData = InPawnData;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PawnData, this);
 
 	if (GetNetMode() == NM_Standalone)
 	{

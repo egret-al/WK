@@ -6,49 +6,29 @@
 #include "Engine/HitResult.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 
-#include "WKAbilitySourceInterface.h"
-
-#include UE_INLINE_GENERATED_CPP_BY_NAME(WKGameplayEffectContext)
-
-class FArchive;
-
-FWKGameplayEffectContext* FWKGameplayEffectContext::ExtractEffectContext(FGameplayEffectContextHandle Handle)
+bool FWKGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
-	FGameplayEffectContext* BaseEffectContext = Handle.Get();
-	if ((BaseEffectContext != nullptr) && BaseEffectContext->GetScriptStruct()->IsChildOf(FWKGameplayEffectContext::StaticStruct()))
+	if (Ar.IsLoading())
 	{
-		return static_cast<FWKGameplayEffectContext*>(BaseEffectContext);
+		TargetData.Clear();
 	}
 
-	return nullptr;
+	TargetData.NetSerialize(Ar, Map, bOutSuccess);
+	Ar << SkillID;
+	return Super::NetSerialize(Ar, Map, bOutSuccess);
 }
 
-bool FWKGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+FWKGameplayEffectContext* FWKGameplayEffectContext::Duplicate() const
 {
-	FGameplayEffectContext::NetSerialize(Ar, Map, bOutSuccess);
-
-	// Not serialized for post-activation use:
-	// CartridgeID
-
-	return true;
-}
-
-void FWKGameplayEffectContext::SetAbilitySource(const IWKAbilitySourceInterface* InObject, float InSourceLevel)
-{
-	AbilitySourceObject = MakeWeakObjectPtr(Cast<const UObject>(InObject));
-	//SourceLevel = InSourceLevel;
-}
-
-const IWKAbilitySourceInterface* FWKGameplayEffectContext::GetAbilitySource() const
-{
-	return Cast<IWKAbilitySourceInterface>(AbilitySourceObject.Get());
-}
-
-const UPhysicalMaterial* FWKGameplayEffectContext::GetPhysicalMaterial() const
-{
-	if (const FHitResult* HitResultPtr = GetHitResult())
+	FWKGameplayEffectContext* NewContext = new FWKGameplayEffectContext();
+	*NewContext = *this;
+	NewContext->AddActors(Actors);
+	if (GetHitResult())
 	{
-		return HitResultPtr->PhysMaterial.Get();
+		NewContext->AddHitResult(*GetHitResult(), true);
 	}
-	return nullptr;
+	NewContext->TargetData.Append(TargetData);
+	NewContext->SkillID = SkillID;
+	return NewContext;
 }
+

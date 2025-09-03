@@ -18,7 +18,7 @@ struct FWKAbilitySet_GameplayAbility
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, NotReplicated)
 	TSubclassOf<UWKGameplayAbility> Ability = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -31,7 +31,7 @@ struct FWKAbilitySet_GameplayEffect
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, NotReplicated)
 	TSubclassOf<UGameplayEffect> GameplayEffect = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)

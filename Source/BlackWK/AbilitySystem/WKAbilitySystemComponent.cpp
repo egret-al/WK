@@ -561,7 +561,7 @@ void UWKAbilitySystemComponent::AbilityCancelListenWithInput(int32 InputID, FGam
 
 void UWKAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 {
-	Super::AbilityLocalInputPressed(InputID);
+	// Super::AbilityLocalInputPressed(InputID);
 
 	OnAbilityInputPressedDelegate.Broadcast(InputID);
 
@@ -571,7 +571,7 @@ void UWKAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 		LocalInputConfirm();
 		return;
 	}
-
+	
 	if (IsGenericCancelInputBound(InputID))
 	{
 		LocalInputCancel();
@@ -584,7 +584,7 @@ void UWKAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 		{
 			continue;
 		}
-
+	
 		// 检测是否已经激活
 		if (Spec.IsActive())
 		{
@@ -595,11 +595,11 @@ void UWKAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 				{
 					ServerSetInputPressed(Spec.Handle);
 				}
-
+	
 				AbilitySpecInputPressed(Spec);
 				// Invoke the InputPressed event. This is not replicated here. If someone is listening, they may replicate the InputPressed event to the server.
 				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, Spec.GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey());
-
+	
 				if (WKAbility)
 				{
 					if (WKAbility->AbilityDataAsset && WKAbility->AbilityDataAsset->TryReactive)

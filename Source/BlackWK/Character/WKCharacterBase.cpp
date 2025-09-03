@@ -27,12 +27,20 @@ void AWKCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (AWKPlayerState* PS = Cast<AWKPlayerState>(GetPlayerState()))
-	{
-		PS->SetPawnData(PawnData);
-	}
-
 	OnBeginPlay();
+}
+
+void AWKCharacterBase::OnPlayerStateChanged(APlayerState* NewPlayerState, APlayerState* OldPlayerState)
+{
+	Super::OnPlayerStateChanged(NewPlayerState, OldPlayerState);
+	
+	if (NewPlayerState && HasAuthority())
+	{
+		if (AWKPlayerState* PS = Cast<AWKPlayerState>(NewPlayerState))
+		{
+			PS->SetPawnData(PawnData);
+		}
+	}
 }
 
 void AWKCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -151,7 +159,6 @@ void AWKCharacterBase::OnBeginPlay()
 	TargetRotation = GetActorRotation();
 	LastVelocityRotation = GetActorRotation();
 	LastMovementInputRotation = GetActorRotation();
-	
 }
 
 void AWKCharacterBase::SetEssentialValues()
