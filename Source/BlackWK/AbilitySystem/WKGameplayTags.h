@@ -16,10 +16,18 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Input_BlockMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_ShouldMove);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Attack_Detection);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_BeHit);
+	
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_PerfectDodge);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeF);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeB);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeL);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeR);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill01);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_Dodge);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_PerfectDodge);
 	
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString = false);
 }

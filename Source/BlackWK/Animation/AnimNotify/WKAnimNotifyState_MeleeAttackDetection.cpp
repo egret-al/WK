@@ -548,17 +548,17 @@ void UWKAnimNotifyState_MeleeAttackDetection::HandleHitActors(AActor* OwnerActor
 
 				
 				AWKCharacterBase* HitCharacter = Cast<AWKCharacterBase>(Hit.GetActor());
-				if (IsValid(HitCharacter))
-				{
-					//无敌直接忽略
-					if(HitCharacter->HasMatchingGameplayTag(WKGameplayTags::Gameplay_State_Invincible))
-					{
-						HitActorsData->AnimNotifyWeaponAttack_HitActors.AddUnique(HitActor);
-						bReceiveHit = false;
-					}
-				}
+				// if (IsValid(HitCharacter))
+				// {
+				// 	//无敌直接忽略
+				// 	if(HitCharacter->HasMatchingGameplayTag(WKGameplayTags::Gameplay_State_Invincible))
+				// 	{
+				// 		HitActorsData->AnimNotifyWeaponAttack_HitActors.AddUnique(HitActor);
+				// 		bReceiveHit = false;
+				// 	}
+				// }
 
-				// 能接收伤害
+				// 被检测到了
 				if (bReceiveHit)
 				{
 					if (EventTag.IsValid())
