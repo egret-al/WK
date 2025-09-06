@@ -29,4 +29,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "WKGame", meta = (WorldContext = "WorldContextObject"))
 	static TArray<AWKPlayerController*> GetAllPlayerController(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintPure, Category = "WKGame|Animation")
+	static bool CalculateBeHitInfo(const AWKCharacterBase* InInstigator, const AWKCharacterBase* BeHitCharacter, const FHitResult& HitResult, float HitImpact, UAnimMontage*& OutHitMontage, FName& OutSectionName);
 };

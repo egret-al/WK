@@ -6,10 +6,12 @@
 #include "Engine/DataAsset.h"
 #include "WKPawnData.generated.h"
 
+class UWKAnimationConfig;
 class UWKInputConfig;
 class UWKAbilitySet;
+
 /**
- * 
+ * 定义一个Pawn
  */
 UCLASS(BlueprintType, Const, Meta = (ShortTooltip = "定义一个Pawn"))
 class BLACKWK_API UWKPawnData : public UPrimaryDataAsset
@@ -27,4 +29,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
 	TObjectPtr<UWKInputConfig> InputConfig;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Animation")
+	TObjectPtr<UWKAnimationConfig> AnimationConfig;
 };

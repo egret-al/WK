@@ -15,6 +15,7 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Dodging);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Input_BlockMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_Hit);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_BeHitEnd);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_ShouldMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Attack_Detection);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_BeHit);

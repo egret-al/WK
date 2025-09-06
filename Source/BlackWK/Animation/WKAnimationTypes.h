@@ -32,3 +32,51 @@ enum class EWKMovementDirection : uint8
 	Left,
 	Backward
 };
+
+// 动画方向
+UENUM(BlueprintType)
+enum class EWKAnimDirection : uint8
+{
+	F,
+	R,
+	L,
+	B
+};
+
+USTRUCT(BlueprintType)
+struct FWKDirectionHitImpact
+{
+	GENERATED_BODY()
+
+	// 击中强度，决定受击动画的受击程度
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float HitImpact = 0.f;
+
+	// 该击中强度下，可选的动画蒙太奇的SectionName
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FName> SectionNames;
+};
+
+USTRUCT(BlueprintType)
+struct FWKDirectionHitImpactAmount
+{
+	GENERATED_BODY()
+
+	// 包含各个受击程度下的受击SectionName数组
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FWKDirectionHitImpact> BeHitImpacts;
+};
+
+USTRUCT(BlueprintType)
+struct FWKBeHitImpact
+{
+	GENERATED_BODY()
+
+	// 受击动画蒙太奇
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	TSoftObjectPtr<UAnimMontage> BeHitMontage;
+	
+	// 各个方向的受击配置
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Direction")
+	TMap<EWKAnimDirection, FWKDirectionHitImpactAmount> BeHitImpactDirections;
+};

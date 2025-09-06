@@ -66,6 +66,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	virtual AWKCharacterBase* GetCurrentAttackLockTarget() const { return nullptr; }
 
+	UFUNCTION(BlueprintPure)
+	const UWKPawnData* GetPawnData() const { return PawnData.Get(); }
+
 protected:
 	virtual void OnAbilitySystemInitialized();
 
