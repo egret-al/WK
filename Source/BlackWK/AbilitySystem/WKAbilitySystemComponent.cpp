@@ -6,6 +6,7 @@
 #include "WKGameplayTags.h"
 #include "Abilities/WKGameplayAbility.h"
 #include "BlackWK/Animation/WKAnimInstanceBase.h"
+#include "BlackWK/Character/WKAICharacterBase.h"
 #include "BlackWK/Character/WKCharacterBase.h"
 #include "BlackWK/Character/WKPlayerCharacterBase.h"
 #include "BlackWK/Player/WKPlayerController.h"
@@ -253,6 +254,7 @@ void UWKAbilitySystemComponent::ApplyPriorityBlockAndCancel(UWKGameplayAbility* 
 
 		// 最后更新数据
 		CurrentPriorityInfo = PriorityInfo;
+
 		CurrentPriorityAbility = RequestAbility;
 	}
 }
