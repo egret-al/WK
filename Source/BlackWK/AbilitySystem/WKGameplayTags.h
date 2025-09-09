@@ -27,8 +27,13 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeR);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill01);
+	
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Skill_Charge);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_Dodge);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_PerfectDodge);
+	
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Amount_StickEnergy);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Amount_BaseDamage);
 	
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString = false);
 }

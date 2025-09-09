@@ -29,6 +29,8 @@ public:
 	ATTRIBUTE_ACCESSORS(UWKCombatSet, Stamina);
 	ATTRIBUTE_ACCESSORS(UWKCombatSet, MaxStamina);
 	ATTRIBUTE_ACCESSORS(UWKCombatSet, StaminaRecovery);
+	ATTRIBUTE_ACCESSORS(UWKCombatSet, StickEnergy);
+	ATTRIBUTE_ACCESSORS(UWKCombatSet, MaxStickEnergy);
 	ATTRIBUTE_ACCESSORS(UWKCombatSet, ImpactAmount);
 
 	mutable FWKAttributeEvent OnManaChanged;
@@ -37,6 +39,8 @@ public:
 	mutable FWKAttributeEvent OnMaxStaminaChanged;
 	mutable FWKAttributeEvent OnResilienceChanged;
 	mutable FWKAttributeEvent OnMaxResilienceChanged;
+	mutable FWKAttributeEvent OnStickEnergyChanged;
+	mutable FWKAttributeEvent OnMaxStickEnergyChanged;
 
 protected:
 	virtual bool PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data) override;
@@ -83,6 +87,12 @@ protected:
 	UFUNCTION()
 	void OnRep_StaminaRecovery(const FGameplayAttributeData& OldValue);
 
+	UFUNCTION()
+	void OnRep_StickEnergy(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_MaxStickEnergy(const FGameplayAttributeData& OldValue);
+
 public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_BaseDamage, Category = "CombatSet|Combat")
 	FGameplayAttributeData BaseDamage;
@@ -126,6 +136,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_StaminaRecovery, Category = "CombatSet|Combat")
 	FGameplayAttributeData StaminaRecovery;
 
+	// 棍势
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_StickEnergy, Category = "CombatSet|Combat")
+	FGameplayAttributeData StickEnergy;
+
+	// 最大棍势值
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxStickEnergy, Category = "CombatSet|Combat")
+	FGameplayAttributeData MaxStickEnergy;
+	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ImpactAmount, Category = "CombatSet|Combat")
 	FGameplayAttributeData ImpactAmount;
 
@@ -136,4 +154,6 @@ private:
 	float MaxResilienceBeforeAttributeChange;
 	float StaminaBeforeAttributeChange;
 	float MaxStaminaBeforeAttributeChange;
+	float StickEnergyBeforeAttributeChange;
+	float MaxStickEnergyBeforeAttributeChange;
 };

@@ -555,7 +555,6 @@ void UWKAbilitySystemComponent::AbilityCancelListenWithInput(int32 InputID, FGam
 		if (ListenerHandle.AbilityHandle == AbilityHandle)
 		{
 			ListenerHandle.bListen[ListenType] = false;
-			//AbilityInputListenerHandles->Remove(ListenerHandle);
 			return;
 		}
 	}

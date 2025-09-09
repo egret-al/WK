@@ -55,6 +55,8 @@ void UWKHealthComponent::InitializeWithAbilitySystem(UWKAbilitySystemComponent* 
 	CombatSet->OnMaxStaminaChanged.AddUObject(this, &ThisClass::HandleMaxStaminaChanged);
 	CombatSet->OnResilienceChanged.AddUObject(this, &ThisClass::HandleResilienceChanged);
 	CombatSet->OnMaxResilienceChanged.AddUObject(this, &ThisClass::HandleMaxResilienceChanged);
+	CombatSet->OnStickEnergyChanged.AddUObject(this, &ThisClass::HandleStickEnergyChanged);
+	CombatSet->OnMaxStickEnergyChanged.AddUObject(this, &ThisClass::HandleMaxStickEnergyChanged);
 
 	AbilitySystemComponent->SetNumericAttributeBase(UWKHealthSet::GetHealthAttribute(), HealthSet->GetMaxHealth());
 
@@ -115,6 +117,16 @@ float UWKHealthComponent::GetMaxMana() const
 	return CombatSet ? CombatSet->GetMaxMana() : 0.f;
 }
 
+float UWKHealthComponent::GetStickEnergy() const
+{
+	return CombatSet ? CombatSet->GetStickEnergy() : 0.f;
+}
+
+float UWKHealthComponent::GetMaxStickEnergy() const
+{
+	return CombatSet ? CombatSet->GetMaxStickEnergy() : 0.f;
+}
+
 float UWKHealthComponent::GetHealthNormalized() const
 {
 	if (HealthSet)
@@ -166,6 +178,16 @@ void UWKHealthComponent::HandleStaminaChanged(AActor* DamageInstigator, AActor* 
 void UWKHealthComponent::HandleMaxStaminaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
 {
 	OnMaxStaminaChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleStickEnergyChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnStickEnergyChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
+}
+
+void UWKHealthComponent::HandleMaxStickEnergyChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+{
+	OnMaxStickEnergyChanged.Broadcast(this, OldValue, NewValue, DamageInstigator);
 }
 
 void UWKHealthComponent::HandleOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)

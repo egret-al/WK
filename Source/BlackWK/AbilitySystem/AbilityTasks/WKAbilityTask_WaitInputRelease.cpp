@@ -71,7 +71,7 @@ void UWKAbilityTask_WaitInputRelease::OnReleaseCallback()
 	FScopedPredictionWindow ScopedPrediction(AbilitySystemComponent.Get(), IsPredictingClient());
 
 	FAbilityReplicatedData ReplicatedData = AbilitySystemComponent->GetReplicatedDataOfGenericReplicatedEvent(EAbilityGenericReplicatedEvent::GameCustom6, GetAbilitySpecHandle(), GetActivationPredictionKey());
-	if (ReplicatedData.VectorPayload.X!=BindInputID)
+	if (ReplicatedData.VectorPayload.X != BindInputID)
 	{
 		return;
 	}

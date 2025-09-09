@@ -28,6 +28,8 @@ void UWKCombatSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, Stamina, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, MaxStamina, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, StaminaRecovery, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, StickEnergy, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, MaxStickEnergy, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UWKCombatSet, ImpactAmount, COND_OwnerOnly, REPNOTIFY_Always);
 }
 
@@ -44,6 +46,8 @@ bool UWKCombatSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data
 	MaxStaminaBeforeAttributeChange = GetMaxStamina();
 	ResilienceBeforeAttributeChange = GetResilience();
 	MaxResilienceBeforeAttributeChange = GetMaxResilience();
+	StickEnergyBeforeAttributeChange = GetStickEnergy();
+	MaxStickEnergyBeforeAttributeChange = GetMaxStickEnergy();
 
 	return true;
 }
@@ -67,6 +71,10 @@ void UWKCombatSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDat
 	else if (Data.EvaluatedData.Attribute == GetStaminaAttribute())
 	{
 		SetStamina(FMath::Clamp(GetStamina(), 0.f, GetMaxStamina()));
+	}
+	else if (Data.EvaluatedData.Attribute == GetStickEnergyAttribute())
+	{
+		SetStickEnergy(FMath::Clamp(GetStickEnergy(), 0.f, GetMaxStickEnergy()));
 	}
 
 
@@ -95,6 +103,15 @@ void UWKCombatSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackDat
 	if (GetMaxStamina() != MaxStaminaBeforeAttributeChange)
 	{
 		OnMaxStaminaChanged.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, MaxStaminaBeforeAttributeChange, GetMaxStamina());
+	}
+
+	if (GetStickEnergy() != StickEnergyBeforeAttributeChange)
+	{
+		OnStickEnergyChanged.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, StickEnergyBeforeAttributeChange, GetStickEnergy());
+	}
+	if (GetMaxStickEnergy() != MaxStickEnergyBeforeAttributeChange)
+	{
+		OnMaxStickEnergyChanged.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, MaxStickEnergyBeforeAttributeChange, GetMaxStickEnergy());
 	}
 }
 
@@ -195,4 +212,22 @@ void UWKCombatSet::OnRep_MaxStamina(const FGameplayAttributeData& OldValue)
 void UWKCombatSet::OnRep_StaminaRecovery(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UWKCombatSet, StaminaRecovery, OldValue);
+}
+
+void UWKCombatSet::OnRep_StickEnergy(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UWKCombatSet, StickEnergy, OldValue);
+
+	const float CurrentStickEnergy = GetStickEnergy();
+	const float EstimatedMagnitude = CurrentStickEnergy - OldValue.GetCurrentValue();
+	OnStickEnergyChanged.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentStickEnergy);
+}
+
+void UWKCombatSet::OnRep_MaxStickEnergy(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UWKCombatSet, MaxStickEnergy, OldValue);
+
+	const float CurrentMaxStickEnergy = GetMaxStickEnergy();
+	const float EstimatedMagnitude = CurrentMaxStickEnergy - OldValue.GetCurrentValue();
+	OnMaxStickEnergyChanged.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentMaxStickEnergy);
 }

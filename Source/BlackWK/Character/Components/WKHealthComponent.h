@@ -58,6 +58,12 @@ public:
 	float GetMaxMana() const;
 
 	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetStickEnergy() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	float GetMaxStickEnergy() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
 	float GetHealthNormalized() const;
 
 public:
@@ -85,6 +91,12 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FWKHealth_AttributeChanged OnMaxStaminaChanged;
 
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnStickEnergyChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FWKHealth_AttributeChanged OnMaxStickEnergyChanged;
+
 protected:
 	virtual void HandleHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleMaxHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
@@ -94,6 +106,8 @@ protected:
 	virtual void HandleMaxResilienceChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleStaminaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleMaxStaminaChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleStickEnergyChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
+	virtual void HandleMaxStickEnergyChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 	virtual void HandleOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
 
 protected:
