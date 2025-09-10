@@ -53,5 +53,5 @@ void UWKAnimNotify_ModifyAbilityPriority::Notify(USkeletalMeshComponent* MeshCom
 
 FString UWKAnimNotify_ModifyAbilityPriority::GetNotifyName_Implementation() const
 {
-	return Super::GetNotifyName_Implementation();
+	return FString::Printf(TEXT("Priority:%f"), AbilityPriorityInfo.Priority);
 }
