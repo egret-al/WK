@@ -617,20 +617,20 @@ void UWKAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
 		}
 	}
 
-	// 检测是否有其他ability关注了该事件，使用GameCustom1自主监听Pressed事件
+	// 查找关注这个输入ID的GA Handle
 	TArray<FAbilityInputListenerHandle>* ListenerHandles = InputListeners.Find(InputID);
 	
-	if (ListenerHandles&&!ListenerHandles->IsEmpty())
+	if (ListenerHandles && !ListenerHandles->IsEmpty())
 	{
 		TArray<FAbilityInputListenerHandle> ListenerHandlesCopy = *ListenerHandles;
-		for (FAbilityInputListenerHandle&  Handle : ListenerHandlesCopy)
+		for (FAbilityInputListenerHandle& Handle : ListenerHandlesCopy)
 		{
 			for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
 			{
 				if (Spec.Handle == Handle.AbilityHandle)
 				{
 					FPredictionKey CurrentPredictionKey = FPredictionKey();
-					InvokeReplicatedEventWithPayload(EAbilityGenericReplicatedEvent::GameCustom5, Spec.Handle, Spec.GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey(), CurrentPredictionKey, FVector(InputID, 0, 0));
+					InvokeReplicatedEventWithPayload(EAbilityGenericReplicatedEvent::GameCustom5, Spec.Handle, Spec.GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey(), CurrentPredictionKey, FVector(InputID, 0, 0));		
 				}
 			}
 		}

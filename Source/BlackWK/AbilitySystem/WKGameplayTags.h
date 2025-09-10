@@ -14,10 +14,12 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_IronBody);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Dodging);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_State_Input_BlockMove);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Condition_ResoluteCounterflow);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_Hit);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_BeHitEnd);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_ShouldMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Attack_Detection);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_InputWindow_ResoluteCounterflow_End);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_BeHit);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_PerfectDodge);
@@ -29,6 +31,7 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill01);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Skill_Charge);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Skill_ResoluteCounterflow);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_Dodge);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_PerfectDodge);
 	

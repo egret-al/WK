@@ -42,6 +42,7 @@ enum class EWKGameplayAbilityInputBinds : uint8
 	MeleeCombo		UMETA(DisplayName = "MeleeCombo"),
 	Dodge			UMETA(DisplayName = "Dodge"),
 	Charge			UMETA(DisplayName = "Charge"),
+	Test			UMETA(DisplayName = "Test"),
 };
 
 /**
