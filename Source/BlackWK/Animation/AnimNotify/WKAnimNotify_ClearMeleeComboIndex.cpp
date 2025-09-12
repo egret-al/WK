@@ -14,3 +14,8 @@ void UWKAnimNotify_ClearMeleeComboIndex::Notify(USkeletalMeshComponent* MeshComp
 		MeshOwner->ClearMeleeComboIndex();
 	}
 }
+
+FString UWKAnimNotify_ClearMeleeComboIndex::GetNotifyName_Implementation() const
+{
+	return FString(TEXT("ClearMeleeComboIndex"));
+}

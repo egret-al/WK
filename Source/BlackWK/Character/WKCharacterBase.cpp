@@ -49,6 +49,7 @@ void AWKCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	FDoRepLifetimeParams SimulatedOnlyPushModelBased{ COND_SimulatedOnly, REPNOTIFY_Always, true };
 	DOREPLIFETIME_WITH_PARAMS_FAST(AWKCharacterBase, CurrentMeleeComboIndex, SimulatedOnlyPushModelBased);
+	DOREPLIFETIME_WITH_PARAMS_FAST(AWKCharacterBase, CurrentCounterComboIndex, SimulatedOnlyPushModelBased);
 }
 
 void AWKCharacterBase::Tick(float DeltaSeconds)
@@ -142,6 +143,18 @@ void AWKCharacterBase::SetMeleeComboIndex(int32 Index)
 {
 	CurrentMeleeComboIndex = Index;
 	MARK_PROPERTY_DIRTY_FROM_NAME(AWKCharacterBase, CurrentMeleeComboIndex, this);
+}
+
+void AWKCharacterBase::ClearCounterComboIndex()
+{
+	CurrentCounterComboIndex = INDEX_NONE;
+	MARK_PROPERTY_DIRTY_FROM_NAME(AWKCharacterBase, CurrentCounterComboIndex, this);
+}
+
+void AWKCharacterBase::SetCounterComboIndex(int32 Index)
+{
+	CurrentCounterComboIndex = Index;
+	MARK_PROPERTY_DIRTY_FROM_NAME(AWKCharacterBase, CurrentCounterComboIndex, this);
 }
 
 void AWKCharacterBase::OnAbilitySystemInitialized()

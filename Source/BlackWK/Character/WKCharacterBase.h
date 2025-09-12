@@ -58,6 +58,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMeleeComboIndex(int32 Index);
 
+	UFUNCTION(BlueprintCallable)
+	void ClearCounterComboIndex();
+
+	UFUNCTION(BlueprintCallable)
+	void SetCounterComboIndex(int32 Index);
+
 	// 由AI或者玩家重写
 	UFUNCTION(BlueprintPure)
 	virtual bool IsPlayerCharacter() { return true; }
@@ -103,6 +109,9 @@ protected:
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat", Replicated)
 	int32 CurrentMeleeComboIndex = INDEX_NONE;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat", Replicated)
+	int32 CurrentCounterComboIndex = INDEX_NONE;
 
 protected:
 	virtual void OnBeginPlay();

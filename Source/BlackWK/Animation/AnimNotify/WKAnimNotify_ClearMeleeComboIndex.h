@@ -16,4 +16,5 @@ class BLACKWK_API UWKAnimNotify_ClearMeleeComboIndex : public UWKAnimNotify
 
 public:
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+	virtual FString GetNotifyName_Implementation() const override;
 };

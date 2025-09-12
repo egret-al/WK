@@ -15,3 +15,8 @@ void UWKAnimNotify_RemoveGameplayTag::Notify(USkeletalMeshComponent* MeshComp, U
 		ASC->RemoveGameplayTag(RemoveToTag);
 	}
 }
+
+FString UWKAnimNotify_RemoveGameplayTag::GetNotifyName_Implementation() const
+{
+	return FString::Printf(TEXT("Remove: %s"), *RemoveToTag.ToString()); 
+}
