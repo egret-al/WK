@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "WKCharacterBase.generated.h"
 
+class UMotionWarpingComponent;
 class UWKSkeletalMeshComponent;
 class UWKPawnData;
 class UGameplayEffect;
@@ -85,9 +86,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WKCharacter")
 	FText CharacterName;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "WKCharacter|Animation")
-	UAnimMontage* DeathMontage;
-
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WKCharacter|Abilities")
 	TArray<TSubclassOf<UWKGameplayAbility>> CharacterAbilities;
 
@@ -102,6 +100,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WKCharacter|Character")
 	TObjectPtr<UWKHealthComponent> HealthComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKCharacter|Animation")
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WKConfig")
 	TObjectPtr<const UWKPawnData> PawnData;

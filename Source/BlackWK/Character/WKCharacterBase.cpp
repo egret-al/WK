@@ -3,6 +3,7 @@
 
 #include "WKCharacterBase.h"
 
+#include "MotionWarpingComponent.h"
 #include "WKCharacterMovementComponent.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
@@ -21,6 +22,7 @@ AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
 	bAlwaysRelevant = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
 	HealthComponent = CreateDefaultSubobject<UWKHealthComponent>(TEXT("HealthComponent"));
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
 void AWKCharacterBase::BeginPlay()

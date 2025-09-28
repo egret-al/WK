@@ -813,6 +813,90 @@ void UWKAnimNotifyState_MeleeAttackDetection::CreateDebugShapesForCollisionData(
 }
 #endif
 
+#if WITH_EDITOR
+void UWKAnimNotifyState_MeleeAttackDetection::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	const FName PropertyName = PropertyChangedEvent.GetPropertyName();
+	const FName MemberPropertyName = PropertyChangedEvent.MemberProperty != nullptr ? PropertyChangedEvent.MemberProperty->GetFName() : NAME_None;
+
+	// 更新预览模型
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UWKAnimNotifyState_MeleeAttackDetection, WeaponPreviewMesh))
+	{
+		if (WeaponMeshComp == nullptr && WeaponPreviewMesh && OwnerMeshComp)
+		{
+			TInlineComponentArray<USkeletalMeshComponent*, 2> SkeletalMeshComp;
+			GetCandidateComponents(*OwnerMeshComp, SkeletalMeshComp);
+
+			if (SkeletalMeshComp.Num() > 0)
+			{
+				WeaponMeshComp = SkeletalMeshComp[0];
+			}
+			else
+			{
+				WeaponMeshComp = NewObject<USkeletalMeshComponent>(OwnerMeshComp);
+			}
+
+			if (WeaponMeshComp)
+			{
+				if (WeaponMeshComp->IsRegistered() == false)
+				{
+					WeaponMeshComp->RegisterComponentWithWorld(OwnerMeshComp->GetWorld());
+				}
+
+				WeaponMeshComp->AttachToComponent(OwnerMeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, PreviewMeshSocketName);
+				WeaponMeshComp->SetRelativeLocationAndRotation(PreviewMeshLocationOffset, PreviewMeshRotationOffset);
+			}
+		}
+
+		if (WeaponMeshComp)
+		{
+			WeaponMeshComp->SetSkeletalMesh(WeaponPreviewMesh);
+		}
+	}
+	if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UWKAnimNotifyState_MeleeAttackDetection, PreviewMeshLocationOffset)
+		|| MemberPropertyName == GET_MEMBER_NAME_CHECKED(UWKAnimNotifyState_MeleeAttackDetection, PreviewMeshRotationOffset))
+	{
+		if (WeaponMeshComp)
+		{
+			WeaponMeshComp->SetRelativeLocationAndRotation(PreviewMeshLocationOffset, PreviewMeshRotationOffset);
+		}
+	}
+	if (/**PropertyName == GET_MEMBER_NAME_CHECKED(UWKAnimNotifyState_MeleeAttackDetection, bLeftHandWeapon)
+		|| */PropertyName == GET_MEMBER_NAME_CHECKED(UWKAnimNotifyState_MeleeAttackDetection, PreviewMeshSocketName))
+	{
+		if (WeaponMeshComp && OwnerMeshComp)
+		{
+			WeaponMeshComp->AttachToComponent(OwnerMeshComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale, PreviewMeshSocketName);
+			WeaponMeshComp->SetRelativeLocationAndRotation(PreviewMeshLocationOffset, PreviewMeshRotationOffset);
+		}
+	}
+
+	// 在暂停的情况下，更新碰撞体的大小位置和形状
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UWKAnimNotifyState_MeleeAttackDetection, bUseCustomDefinedCollision)
+		|| MemberPropertyName == GET_MEMBER_NAME_CHECKED(UWKAnimNotifyState_MeleeAttackDetection, CustomCollisionDefs))
+	{
+		if (OwnerMeshComp)
+		{
+			if (bUseCustomDefinedCollision)
+			{
+				CreateDebugShapesForCustomCollision(OwnerMeshComp, CustomCollisionDefs);
+			}
+			else
+			{
+				TInlineComponentArray<UShapeComponent*, 8> ShapeComponentArray;
+				GetCandidateComponents(*OwnerMeshComp, ShapeComponentArray);
+				for (UShapeComponent* S : ShapeComponentArray)
+				{
+					S->SetVisibility(false);
+				}
+			}
+		}
+	}
+}
+#endif
+
 USkeletalMeshComponent* UWKAnimNotifyState_MeleeAttackDetection::GetWeaponMeshComp(USkeletalMeshComponent* MeshComp)
 {
 	FWeaponAttackInfoDef& InfoDef = AttackInfoMap.FindOrAdd(MeshComp);

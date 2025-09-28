@@ -182,6 +182,11 @@ bool UWKGameplayStatics::CalculateBeHitInfo(const AWKCharacterBase* InInstigator
 		}
 	}
 
+	if (FindIndex == INDEX_NONE)
+	{
+		FindIndex = DirectionHitImpacts.Num() - 1;
+	}
+
 	if (FindIndex < 0 || FindIndex >= DirectionHitImpacts.Num())
 	{
 		// 索引错误

@@ -40,6 +40,9 @@ EBTNodeResult::Type UWKBTTask_ActivateAbilityByTag::ExecuteTask(UBehaviorTreeCom
 		return EBTNodeResult::Failed;
 	}
 
-	const bool bActivate = ASC->TryActivateAbilitiesByTag(AbilityTagContainer);
+	TArray<FGameplayTag> ActivateTags;
+	AbilityTagContainer.GetGameplayTagArray(ActivateTags);
+	FGameplayTag ActivateTag = ActivateTags[FMath::RandRange(0, ActivateTags.Num() - 1)];
+	const bool bActivate = ASC->TryActivateAbilitiesByTag(ActivateTag.GetSingleTagContainer());
 	return EBTNodeResult::Succeeded;
 }

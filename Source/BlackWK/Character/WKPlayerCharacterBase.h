@@ -7,6 +7,7 @@
 #include "WKCharacterBase.h"
 #include "WKPlayerCharacterBase.generated.h"
 
+class USphereComponent;
 class AWKPlayerController;
 class UWKFloatingStatusBarWidget;
 struct FInputActionValue;
@@ -46,9 +47,14 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	AWKPlayerController* GetPlayerController() const;
+
+	// 获取最近的攻击追踪范围内的一个目标
+	UFUNCTION(BlueprintPure)
+	AWKCharacterBase* GetNearestAttackTrackingTarget() const;
 	
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void PostInitializeComponents() override;
 
 	void Input_Lock(const FInputActionValue& InputActionValue);
@@ -59,6 +65,12 @@ protected:
 	void SetRotationMode(EWKRotationMode NewRotationMode);
 	virtual void OnRotationModeChanged(EWKRotationMode NewRotationMode);
 
+	UFUNCTION()
+	void OnAttackTrackingBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnAttackTrackingEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
 	float BaseTurnRate = 45.0f;
@@ -73,10 +85,14 @@ protected:
 	FVector StartingCameraBoomLocation;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Camera")
-	USpringArmComponent* CameraBoom;
+	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Camera")
-	UCameraComponent* FollowCamera;
+	TObjectPtr<UCameraComponent> FollowCamera;
+
+	// 攻击追踪
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Combat")
+	TObjectPtr<USphereComponent> AttackTracking; 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Input")
 	TObjectPtr<UInputMappingContext> IMC_Default;
@@ -85,8 +101,6 @@ protected:
 	TObjectPtr<UInputAction> IA_Lock;
 	
 	bool ASCInputBound = false;
-
-	FGameplayTag DeadTag;
 
 protected:
 	// 锁定目标
@@ -114,6 +128,10 @@ protected:
 	// 插值曲线 (编辑器里可指定，比如 EaseInOut)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WKConfig|Lock")
 	TObjectPtr<UCurveFloat> LockInterpCurve;
+
+	// 在攻击追踪范围内的敌人
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WKConfig|Combat")
+	TArray<AWKCharacterBase*> AttackTrackingTargets;
 
 private:
 	// 内部状态

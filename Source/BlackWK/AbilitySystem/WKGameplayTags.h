@@ -19,7 +19,6 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_BeHitEnd);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_ShouldMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Attack_Detection);
-	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_InputWindow_ResoluteCounterflow_End);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_BeHit);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_PerfectDodge);
@@ -29,6 +28,28 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeR);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill01);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill02);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill03);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill04);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill05);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill06);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill07);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill08);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill09);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill10);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill11);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill12);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill13);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill14);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill15);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill16);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill17);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill18);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill19);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill20);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill21);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill22);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_DaSheng_Skill_Skill23);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Skill_Charge);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Skill_ResoluteCounterflow);

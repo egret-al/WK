@@ -18,7 +18,6 @@ namespace WKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_Damage_BeHitEnd, "Gameplay.Message.Damage.BeHitEnd", "被命中时播放的受击动画，收到这个事件后，可以执行随机结束的逻辑");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_ShouldMove, "Gameplay.Message.ShouldMove", "GA播放动画的过程中，执行到了可提前结束GA的移动指令");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_Attack_Detection, "Gameplay.Message.Attack.Detection", "被攻击检测到时，被检测对象会收到这个消息，不论是否有无敌状态");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_InputWindow_ResoluteCounterflow_End, "Gameplay.Message.InputWindow.ResoluteCounterflow.End", "识破检测结束");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_BeHit, "Gameplay.Event.BeHit", "受击GA，通过GameplayEvent激活");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_PerfectDodge, "Gameplay.Event.PerfectDodge", "成功完美闪避，通过GameplayEvent激活");
 	
@@ -28,6 +27,28 @@ namespace WKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_EventData_DodgeR, "Gameplay.EventData.DodgeR", "");
 	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill01, "Ability.DaSheng.Skill.Skill01", "大圣激活技能1的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill02, "Ability.DaSheng.Skill.Skill02", "大圣激活技能2的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill03, "Ability.DaSheng.Skill.Skill03", "大圣激活技能3的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill04, "Ability.DaSheng.Skill.Skill04", "大圣激活技能4的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill05, "Ability.DaSheng.Skill.Skill05", "大圣激活技能5的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill06, "Ability.DaSheng.Skill.Skill06", "大圣激活技能6的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill07, "Ability.DaSheng.Skill.Skill07", "大圣激活技能7的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill08, "Ability.DaSheng.Skill.Skill08", "大圣激活技能8的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill09, "Ability.DaSheng.Skill.Skill09", "大圣激活技能9的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill10, "Ability.DaSheng.Skill.Skill10", "大圣激活技能10的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill11, "Ability.DaSheng.Skill.Skill11", "大圣激活技能11的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill12, "Ability.DaSheng.Skill.Skill12", "大圣激活技能12的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill13, "Ability.DaSheng.Skill.Skill13", "大圣激活技能13的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill14, "Ability.DaSheng.Skill.Skill14", "大圣激活技能14的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill15, "Ability.DaSheng.Skill.Skill15", "大圣激活技能15的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill16, "Ability.DaSheng.Skill.Skill16", "大圣激活技能16的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill17, "Ability.DaSheng.Skill.Skill17", "大圣激活技能17的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill18, "Ability.DaSheng.Skill.Skill18", "大圣激活技能18的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill19, "Ability.DaSheng.Skill.Skill19", "大圣激活技能19的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill20, "Ability.DaSheng.Skill.Skill20", "大圣激活技能20的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill21, "Ability.DaSheng.Skill.Skill21", "大圣激活技能21的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill22, "Ability.DaSheng.Skill.Skill22", "大圣激活技能22的Tag");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_DaSheng_Skill_Skill23, "Ability.DaSheng.Skill.Skill23", "大圣激活技能23的Tag");
 	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_WuKong_Skill_Charge, "Ability.WuKong.Skill.Charge", "悟空蓄力技");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_WuKong_Skill_ResoluteCounterflow, "Ability.WuKong.Skill.ResoluteCounterflow", "悟空蓄力技");

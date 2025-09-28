@@ -139,6 +139,10 @@ private:
 	void CreateDebugShapesForCollisionData(class USkeletalMeshComponent* OwnerComponent, const TArray<FSkeletalMeshBoneCollisionDataCache> InCollisionData);
 
 #endif
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 	
 protected:
 	/** 是否允许多次击中检测 */

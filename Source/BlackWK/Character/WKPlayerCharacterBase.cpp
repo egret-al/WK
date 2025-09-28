@@ -13,8 +13,11 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "BlackWK/AbilitySystem/AttributeSets/WKAttributeSetBase.h"
+#include "BlackWK/AbilitySystem/AttributeSets/WKHealthSet.h"
 #include "BlackWK/Animation/WKAnimInstanceExtensionInterface.h"
 #include "BlackWK/Input/WKPlayerCharacterInputComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/WKHealthComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -40,9 +43,10 @@ AWKPlayerCharacterBase::AWKPlayerCharacterBase(const FObjectInitializer& ObjectI
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionProfileName(FName("NoCollision"));
 
+	AttackTracking = CreateDefaultSubobject<USphereComponent>(TEXT("AttackTracking"));
+	AttackTracking->SetupAttachment(GetRootComponent());
+	
 	bUseControllerRotationYaw = false;
-
-	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
 }
 
 void AWKPlayerCharacterBase::BeginPlay()
@@ -56,6 +60,16 @@ void AWKPlayerCharacterBase::BeginPlay()
 	{
 		InitializeAbilityClient();
 	}
+
+	AttackTracking->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::OnAttackTrackingBeginOverlap);
+	AttackTracking->OnComponentEndOverlap.AddUniqueDynamic(this, &ThisClass::OnAttackTrackingEndOverlap);
+}
+
+void AWKPlayerCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	AttackTracking->OnComponentBeginOverlap.RemoveDynamic(this, &ThisClass::OnAttackTrackingBeginOverlap);
+	AttackTracking->OnComponentEndOverlap.RemoveDynamic(this, &ThisClass::OnAttackTrackingEndOverlap);
+	Super::EndPlay(EndPlayReason);
 }
 
 void AWKPlayerCharacterBase::PostInitializeComponents()
@@ -214,6 +228,35 @@ AWKPlayerController* AWKPlayerCharacterBase::GetPlayerController() const
 	return Cast<AWKPlayerController>(GetController());
 }
 
+AWKCharacterBase* AWKPlayerCharacterBase::GetNearestAttackTrackingTarget() const
+{
+	if (AttackTrackingTargets.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	float Dist = -1.f;
+	AWKCharacterBase* Target = nullptr;
+	for (AWKCharacterBase* AttackTrackingTarget : AttackTrackingTargets)
+	{
+		float DistSquared = FVector::DistSquared(GetActorLocation(), AttackTrackingTarget->GetActorLocation());
+		if (Target)
+		{
+			if (DistSquared < Dist)
+			{
+				Dist = DistSquared;
+				Target = AttackTrackingTarget;
+			}
+		}
+		else
+		{
+			Dist = DistSquared;
+			Target = AttackTrackingTarget;
+		}
+	}
+	return Target;
+}
+
 void AWKPlayerCharacterBase::UpdateLockTargetCameraLocation()
 {
 	if (RotationMode == EWKRotationMode::LookingDirection)
@@ -266,4 +309,39 @@ void AWKPlayerCharacterBase::SetRotationMode(EWKRotationMode NewRotationMode)
 void AWKPlayerCharacterBase::OnRotationModeChanged(EWKRotationMode NewRotationMode)
 {
 	RotationMode = NewRotationMode;
+}
+
+void AWKPlayerCharacterBase::OnAttackTrackingBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AWKCharacterBase* InOtherCharacter = Cast<AWKCharacterBase>(OtherActor);
+	if (!InOtherCharacter || InOtherCharacter == this)
+	{
+		return;
+	}
+
+	// TODO 队伍敌我判断
+
+	UWKHealthComponent* OtherHealthComponent = UWKHealthComponent::FindHealthComponent(OtherActor);
+	if (!OtherHealthComponent)
+	{
+		return;
+	}
+
+	if (OtherHealthComponent->GetHealth() <= 0.f)
+	{
+		return;
+	}
+
+	AttackTrackingTargets.Add(InOtherCharacter);
+}
+
+void AWKPlayerCharacterBase::OnAttackTrackingEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	AWKCharacterBase* InOtherCharacter = Cast<AWKCharacterBase>(OtherActor);
+	if (!InOtherCharacter)
+	{
+		return;
+	}
+
+	AttackTrackingTargets.Remove(InOtherCharacter);
 }
