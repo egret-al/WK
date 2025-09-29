@@ -18,8 +18,10 @@ namespace WKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_Damage_BeHitEnd, "Gameplay.Message.Damage.BeHitEnd", "被命中时播放的受击动画，收到这个事件后，可以执行随机结束的逻辑");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_ShouldMove, "Gameplay.Message.ShouldMove", "GA播放动画的过程中，执行到了可提前结束GA的移动指令");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_Attack_Detection, "Gameplay.Message.Attack.Detection", "被攻击检测到时，被检测对象会收到这个消息，不论是否有无敌状态");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Message_Root, "Gameplay.Message.Root", "进行定身");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_BeHit, "Gameplay.Event.BeHit", "受击GA，通过GameplayEvent激活");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_PerfectDodge, "Gameplay.Event.PerfectDodge", "成功完美闪避，通过GameplayEvent激活");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_Event_Rooted, "Gameplay.Event.Rooted", "被定身时激活，通过GameplayEvent激活");
 	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_EventData_DodgeF, "Gameplay.EventData.DodgeF", "");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Gameplay_EventData_DodgeB, "Gameplay.EventData.DodgeB", "");

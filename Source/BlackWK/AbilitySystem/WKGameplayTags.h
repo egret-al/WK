@@ -19,9 +19,11 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Damage_BeHitEnd);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_ShouldMove);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Attack_Detection);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Message_Root);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_BeHit);
-	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_PerfectDodge);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_Event_Rooted);
+	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeF);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeB);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Gameplay_EventData_DodgeL);
