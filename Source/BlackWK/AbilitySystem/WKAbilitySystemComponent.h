@@ -8,6 +8,7 @@
 #include "DataAssets/WKGameplayAbilityDataAsset.h"
 #include "WKAbilitySystemComponent.generated.h"
 
+struct FWKSkillTableRow;
 struct FWKGameplayAbilityPriorityInfo;
 class UWKGameplayAbility;
 
@@ -34,6 +35,7 @@ class BLACKWK_API UWKAbilitySystemComponent : public UAbilitySystemComponent
 
 public:
 	UWKAbilitySystemComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void OnRegister() override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 	virtual void ApplyAbilityBlockAndCancelTags(const FGameplayTagContainer& AbilityTags, UGameplayAbility* RequestingAbility, bool bEnableBlockTags, const FGameplayTagContainer& BlockTags, bool bExecuteCancelTags, const FGameplayTagContainer& CancelTags) override;
@@ -98,6 +100,14 @@ public:
 
 	void ProcessRotatorControlToTarget(AActor* Target);
 	void UpdateRotatorControlToTarget(float DeltaTime);
+
+	/** 根据技能ID获取技能表信息 */
+	UFUNCTION(BlueprintPure)
+	bool GetSkillRowByID(const int32 SkillID, FWKSkillTableRow& OutRow) const;
+
+	/** 获取所有的技能表信息 */
+	UFUNCTION(BlueprintPure)
+	TArray<FWKSkillTableRow> GetSkillTableRows() const;
 	
 protected:
 	/** 尝试在生成时就去激活可以激活的GA */
@@ -155,4 +165,6 @@ private:
 	TWeakObjectPtr<AActor> TurnToTarget;
 
 	float RotatorControlToTargetTimer;
+
+	TMap<int32, FWKSkillTableRow*> SkillTableRowMap;
 };

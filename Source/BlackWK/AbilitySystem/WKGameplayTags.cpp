@@ -57,6 +57,8 @@ namespace WKGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_WuKong_Movement_Dodge, "Ability.WuKong.Movement.Dodge", "悟空激活闪避的Tag");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_WuKong_Movement_PerfectDodge, "Ability.WuKong.Movement.PerfectDodge", "悟空激活完美闪避的Tag");
 	
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Skill_Cooldown, "Ability.Skill.Cooldown", "冷却Tag");
+	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Amount_StickEnergy, "SetByCaller.Amount.StickEnergy", "");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Amount_BaseDamage, "SetByCaller.Amount.BaseDamage", "");
 

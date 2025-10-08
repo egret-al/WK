@@ -6,6 +6,7 @@
 #include "BehaviorTree/BTTaskNode.h"
 #include "WKBTTask_ActivateAbilityByTag.generated.h"
 
+struct FAbilityEndedData;
 /**
  * 根据Tag激活GA
  */
@@ -17,10 +18,18 @@ class BLACKWK_API UWKBTTask_ActivateAbilityByTag : public UBTTaskNode
 public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
+private:
+	void OnAbilityEnded(const FAbilityEndedData& EndedData);
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "WKConfig")
 	FGameplayTagContainer AbilityTagContainer;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Read")
 	FBlackboardKeySelector CurrentTargetSelector;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UBehaviorTreeComponent> OwnerBehaviorTreeComponent;
+	
+	FDelegateHandle AbilityEndedHandle;
 };

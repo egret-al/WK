@@ -6,8 +6,11 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask.h"
 #include "BlackWK/AbilitySystem/WKAbilitySystemComponent.h"
+#include "BlackWK/AbilitySystem/DataAssets/WKDataTypes.h"
 #include "BlackWK/AbilitySystem/DataAssets/WKGameplayAbilityDataAsset.h"
 #include "BlackWK/Character/WKCharacterBase.h"
+#include "BlackWK/Character/Components/WKSkillComponent.h"
+#include "BlackWK/Data/WKGameplaySettings.h"
 #include "BlackWK/Player/WKPlayerState.h"
 
 UWKGameplayAbility::UWKGameplayAbility(const FObjectInitializer& ObjectInitializer)
@@ -174,9 +177,21 @@ bool UWKGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Han
 	
 	if (ASC->GetOwner()->GetNetMode() != NM_Standalone && ASC->GetOwner()->GetLocalRole() == ROLE_Authority)
 	{
-		if(!bServerCheckCanActive)
+		if (!bServerCheckCanActive)
 		{
 			bSuperResult = true;
+		}
+	}
+
+	// cd检查
+	if (bCustomCooldown && AbilityDataAsset && AbilityDataAsset->DataID > 0)
+	{
+		if (UWKSkillComponent* SkillComponent = OwnerAvatar->GetSkillComponent())
+		{
+			if (SkillComponent->IsSkillInCooldown(AbilityDataAsset->DataID))
+			{
+				return false;
+			}
 		}
 	}
 	
@@ -226,6 +241,20 @@ bool UWKGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Han
 void UWKGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	// 检查是否需要启用cd
+	if (bCustomCooldown && AbilityDataAsset && AbilityDataAsset->DataID > 0)
+	{
+		// 接入CD
+		if (AWKCharacterBase* OwnerAvatar = Cast<AWKCharacterBase>(ActorInfo->AvatarActor))
+		{
+			if (UWKSkillComponent* SkillComponent = OwnerAvatar->GetSkillComponent())
+			{
+				// 开启cd
+				SkillComponent->StartSkillCooldown(AbilityDataAsset->DataID);
+			}
+		}	
+	}
 }
 
 void UWKGameplayAbility::PreActivate(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData)

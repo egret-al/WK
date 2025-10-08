@@ -57,6 +57,8 @@ namespace WKGameplayTags
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Skill_ResoluteCounterflow);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_Dodge);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_WuKong_Movement_PerfectDodge);
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Skill_Cooldown);
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Amount_StickEnergy);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Amount_BaseDamage);

@@ -9,13 +9,40 @@
 #include "BlackWK/Character/WKAICharacterBase.h"
 #include "BlackWK/Character/WKCharacterBase.h"
 #include "BlackWK/Character/WKPlayerCharacterBase.h"
+#include "BlackWK/Data/WKGameplaySettings.h"
 #include "BlackWK/Player/WKPlayerController.h"
+#include "DataAssets/WKDataTypes.h"
 #include "DataAssets/WKGameplayAbilityDataAsset.h"
 #include "Kismet/KismetMathLibrary.h"
 
 UWKAbilitySystemComponent::UWKAbilitySystemComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+}
+
+void UWKAbilitySystemComponent::OnRegister()
+{
+	Super::OnRegister();
+
+	UWKGameplaySettings* GameplaySettings = UWKGameplaySettings::GetGameplaySettings();
+	if (!GameplaySettings)
+	{
+		return;
+	}
+
+	UDataTable* SkillTable = GameplaySettings->SkillTable.LoadSynchronous();
+	if (!SkillTable)
+	{
+		return;
+	}
+
+	SkillTableRowMap.Empty();
+	TArray<FWKSkillTableRow*> SkillTableRows;
+	SkillTable->GetAllRows<FWKSkillTableRow>(TEXT(""), SkillTableRows);
+	for (FWKSkillTableRow* SkillTableRow : SkillTableRows)
+	{
+		SkillTableRowMap.Add(SkillTableRow->SkillID, SkillTableRow);
+	}
 }
 
 void UWKAbilitySystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -489,6 +516,26 @@ void UWKAbilitySystemComponent::UpdateRotatorControlToTarget(float DeltaTime)
 			TurnToTarget.Reset();
 		}
 	}
+}
+
+bool UWKAbilitySystemComponent::GetSkillRowByID(const int32 SkillID, FWKSkillTableRow& OutRow) const
+{
+	if (FWKSkillTableRow* const* FindRow = SkillTableRowMap.Find(SkillID))
+	{
+		OutRow = **FindRow;
+		return true;
+	}
+	return false;
+}
+
+TArray<FWKSkillTableRow> UWKAbilitySystemComponent::GetSkillTableRows() const
+{
+	TArray<FWKSkillTableRow> Rows;
+	for (auto SkillTableRow : SkillTableRowMap)
+	{
+		Rows.Add(*SkillTableRow.Value);
+	}
+	return Rows;
 }
 
 void UWKAbilitySystemComponent::TryActivateAbilitiesOnSpawn()

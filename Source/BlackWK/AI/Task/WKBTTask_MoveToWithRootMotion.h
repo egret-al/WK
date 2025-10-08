@@ -20,8 +20,11 @@ public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
-	UPROPERTY(EditAnywhere, Category="Blackboard")
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
 	FBlackboardKeySelector CurrentTargetKey;
+
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector PrepareReleaseSkillIDSelector;
 
 	UPROPERTY(EditAnywhere, Category="Config")
 	float AcceptableRadius = 400.f;

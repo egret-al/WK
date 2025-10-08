@@ -44,4 +44,12 @@ void UWKBTTask_MoveToWithRootMotion::TickTask(UBehaviorTreeComponent& OwnerComp,
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
+	else
+	{
+		int32 SkillID = BlackboardComponent->GetValueAsInt(PrepareReleaseSkillIDSelector.SelectedKeyName);
+		if (SkillID > 0)
+		{
+			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		}
+	}
 }

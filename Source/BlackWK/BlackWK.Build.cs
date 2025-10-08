@@ -26,7 +26,9 @@ public class BlackWK : ModuleRules
 			"AIModule",
 			"NetCore",
 			
-			"MotionWarping"
+			"MotionWarping",
+			
+			"DeveloperSettings"
 		});
 	}
 }

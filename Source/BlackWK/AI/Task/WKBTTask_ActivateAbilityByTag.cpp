@@ -43,6 +43,29 @@ EBTNodeResult::Type UWKBTTask_ActivateAbilityByTag::ExecuteTask(UBehaviorTreeCom
 	TArray<FGameplayTag> ActivateTags;
 	AbilityTagContainer.GetGameplayTagArray(ActivateTags);
 	FGameplayTag ActivateTag = ActivateTags[FMath::RandRange(0, ActivateTags.Num() - 1)];
-	const bool bActivate = ASC->TryActivateAbilitiesByTag(ActivateTag.GetSingleTagContainer());
-	return EBTNodeResult::Succeeded;
+	if (ASC->TryActivateAbilitiesByTag(ActivateTag.GetSingleTagContainer()))
+	{
+		OwnerBehaviorTreeComponent = OwnerComp;
+		// 激活成功，监听GA结束
+		AbilityEndedHandle = ASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
+		return EBTNodeResult::InProgress;
+	}
+	return EBTNodeResult::Failed;
+}
+
+void UWKBTTask_ActivateAbilityByTag::OnAbilityEnded(const FAbilityEndedData& EndedData)
+{
+	if (!EndedData.AbilityThatEnded)
+	{
+		return;
+	}
+	
+	UAbilitySystemComponent* ASC = EndedData.AbilityThatEnded->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC)
+	{
+		return;
+	}
+
+	ASC->OnAbilityEnded.Remove(AbilityEndedHandle);
+	FinishLatentTask(*OwnerBehaviorTreeComponent, EBTNodeResult::Succeeded);
 }

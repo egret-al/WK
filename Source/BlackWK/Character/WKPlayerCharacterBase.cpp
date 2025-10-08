@@ -215,7 +215,11 @@ bool AWKPlayerCharacterBase::IsPlayerCharacter()
 
 AWKCharacterBase* AWKPlayerCharacterBase::GetCurrentAttackLockTarget() const
 {
-	return LockTarget;
+	if (LockTarget)
+	{
+		return LockTarget;
+	}
+	return GetNearestAttackTrackingTarget();
 }
 
 FVector2d AWKPlayerCharacterBase::GetMoveInput() const

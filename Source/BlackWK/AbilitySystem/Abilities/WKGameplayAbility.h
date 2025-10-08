@@ -98,6 +98,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Skill")
 	TObjectPtr<UWKGameplayAbilityDataAsset> AbilityDataAsset;
 
+	// 如果开启了自定义CD，则会使用技能表的CD覆盖掉默认的CD Class
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WKConfig|Skill")
+	bool bCustomCooldown = false;
+
 	// 服务器是否检查优先级，默认开启，在需要网络同步要求高时只本地检测
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WKGameplayAbility")
 	bool bServerCheckCanActive = true;

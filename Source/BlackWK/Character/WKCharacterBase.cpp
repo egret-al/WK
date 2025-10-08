@@ -11,6 +11,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WKHealthComponent.h"
 #include "Components/WKSkeletalMeshComponent.h"
+#include "Components/WKSkillComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
@@ -22,6 +23,7 @@ AWKCharacterBase::AWKCharacterBase(const FObjectInitializer& ObjectInitializer)
 	bAlwaysRelevant = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
 	HealthComponent = CreateDefaultSubobject<UWKHealthComponent>(TEXT("HealthComponent"));
+	SkillComponent = CreateDefaultSubobject<UWKSkillComponent>(TEXT("SkillComponent"));
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
@@ -119,6 +121,11 @@ bool AWKCharacterBase::HasAllMatchingGameplayTags(const FGameplayTagContainer& T
 UWKSkeletalMeshComponent* AWKCharacterBase::GetWKSkeletalMeshComponent() const
 {
 	return Cast<UWKSkeletalMeshComponent>(GetMesh());
+}
+
+UWKSkillComponent* AWKCharacterBase::GetSkillComponent() const
+{
+	return SkillComponent;
 }
 
 UAbilitySystemComponent* AWKCharacterBase::GetAbilitySystemComponent() const

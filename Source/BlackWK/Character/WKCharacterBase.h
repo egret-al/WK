@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "WKCharacterBase.generated.h"
 
+class UWKSkillComponent;
 class UMotionWarpingComponent;
 class UWKSkeletalMeshComponent;
 class UWKPawnData;
@@ -46,6 +47,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	UWKSkeletalMeshComponent* GetWKSkeletalMeshComponent() const;
+
+	UFUNCTION(BlueprintPure)
+	UWKSkillComponent* GetSkillComponent() const;
 	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UWKAbilitySystemComponent* GetWKAbilitySystemComponent() const;
@@ -100,6 +104,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WKCharacter|Character")
 	TObjectPtr<UWKHealthComponent> HealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WKCharacter|Character")
+	TObjectPtr<UWKSkillComponent> SkillComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKCharacter|Animation")
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;

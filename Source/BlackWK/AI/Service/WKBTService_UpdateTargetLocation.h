@@ -20,10 +20,10 @@ protected:
 
 protected:
 	// 当前跟随的目标
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Read")
 	FBlackboardKeySelector CurrentTargetSelector;
 
 	// 当前跟随的目标位置，这个是需要计算后设置回去的
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WKConfig|Write")
 	FBlackboardKeySelector TargetLocationSelector;
 };
