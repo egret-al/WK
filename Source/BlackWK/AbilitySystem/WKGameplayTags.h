@@ -62,6 +62,7 @@ namespace WKGameplayTags
 	
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Amount_StickEnergy);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Amount_BaseDamage);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(SetByCaller_Amount_Resilience);
 	
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString = false);
 }

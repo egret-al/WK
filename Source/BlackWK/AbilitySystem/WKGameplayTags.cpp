@@ -61,6 +61,7 @@ namespace WKGameplayTags
 	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Amount_StickEnergy, "SetByCaller.Amount.StickEnergy", "");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Amount_BaseDamage, "SetByCaller.Amount.BaseDamage", "");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SetByCaller_Amount_Resilience, "SetByCaller.Amount.Resilience", "");
 
 	FGameplayTag FindTagByString(const FString& TagString, bool bMatchPartialString)
 	{
